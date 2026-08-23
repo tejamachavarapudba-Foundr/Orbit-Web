@@ -1,60 +1,50 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 
-import { addMemberAction } from "../actions";
-import type { ConnectedProfile } from "@/lib/types";
+import { PeoplePicker } from "@/components/PeoplePicker";
+import { addMembersAction } from "../actions";
+import type { Profile } from "@/lib/types";
 
 type AddMemberFormProps = {
   communityId: string;
-  candidates: ConnectedProfile[];
+  people: Profile[];
+  existingMemberIds: Set<string>;
 };
 
-export const AddMemberForm = ({ communityId, candidates }: AddMemberFormProps) => {
+export const AddMemberForm = ({ communityId, people, existingMemberIds }: AddMemberFormProps) => {
   const router = useRouter();
+  const [selected, setSelected] = useState<Profile[]>([]);
   const [isPending, startTransition] = useTransition();
+  const selectedIds = new Set(selected.map((p) => p.id));
 
-  if (candidates.length === 0) {
-    return <p className="text-xs text-muted">All your connections are already in this community.</p>;
-  }
+  const toggle = (person: Profile) => {
+    setSelected((prev) => (prev.some((p) => p.id === person.id) ? prev.filter((p) => p.id !== person.id) : [...prev, person]));
+  };
+
+  const submit = () => {
+    if (selected.length === 0) return;
+    startTransition(async () => {
+      await addMembersAction(communityId, selected.map((p) => p.id));
+      setSelected([]);
+      router.refresh();
+    });
+  };
 
   return (
-    <form
-      action={(formData) => {
-        const userId = String(formData.get("userId") ?? "");
-        if (!userId) return;
-        startTransition(async () => {
-          await addMemberAction(communityId, userId);
-          router.refresh();
-        });
-      }}
-      className="flex items-center gap-2"
-    >
-      <select
-        name="userId"
-        required
-        defaultValue=""
-        className="h-9 flex-1 rounded-lg border border-border/70 bg-muted-bg/60 px-2.5 text-xs text-text outline-none focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
-      >
-        <option value="" disabled>
-          Add a connection...
-        </option>
-        {candidates.map((c) => (
-          <option key={c.profile.id} value={c.profile.id}>
-            {c.profile.fullName}
-          </option>
-        ))}
-      </select>
+    <div className="flex flex-col gap-2.5">
+      <PeoplePicker people={people} selectedIds={selectedIds} onToggle={toggle} disabledIds={existingMemberIds} />
       <button
-        type="submit"
-        disabled={isPending}
-        className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-indigo-500 px-3 py-2 text-xs font-bold text-on-primary disabled:opacity-60"
+        type="button"
+        onClick={submit}
+        disabled={isPending || selected.length === 0}
+        className="flex items-center justify-center gap-1.5 self-start rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-2 text-xs font-bold text-on-primary disabled:opacity-60"
       >
         <UserPlus className="h-3.5 w-3.5" strokeWidth={2} />
-        Add
+        {isPending ? "Adding..." : "Add to community"}
       </button>
-    </form>
+    </div>
   );
 };

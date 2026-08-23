@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
-import { getMe } from "@/lib/auth";
 
 import { apiFetch, ApiError } from "@/lib/api";
-import type { AuthMe, CommunityDetail, ConnectedProfile } from "@/lib/types";
+import { getMe } from "@/lib/auth";
+import type { CommunityDetail, Profile } from "@/lib/types";
 
 import { AddMemberForm } from "./AddMemberForm";
 
@@ -29,10 +29,9 @@ export default async function CommunityDetailPage({ params }: CommunityDetailPag
   }
 
   const me = await getMe();
-  const connections = await apiFetch<ConnectedProfile[]>(`/connections/${me.id}`).catch(() => [] as ConnectedProfile[]);
-
-  const memberIds = new Set(community.members.map((m) => m.userId));
-  const candidates = connections.filter((c) => !memberIds.has(c.profile.id));
+  const allProfiles = await apiFetch<Profile[]>("/profiles");
+  const people = allProfiles.filter((p) => p.id !== me.id);
+  const existingMemberIds = new Set(community.members.map((m) => m.userId));
 
   return (
     <div className="max-w-160">
@@ -44,13 +43,13 @@ export default async function CommunityDetailPage({ params }: CommunityDetailPag
         <p className="mt-1 text-sm text-muted">{community.description || "No description yet."}</p>
         <span className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-muted">
           <Users className="h-3.5 w-3.5" strokeWidth={2} />
-          {community.members.length} members
+          {community.members.length} member{community.members.length === 1 ? "" : "s"}
         </span>
       </div>
 
       <div className="glass mt-4 rounded-2xl p-4">
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Add members</h2>
-        <AddMemberForm communityId={id} candidates={candidates} />
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Invite people</h2>
+        <AddMemberForm communityId={id} people={people} existingMemberIds={existingMemberIds} />
       </div>
 
       <div className="glass mt-4 rounded-2xl p-4">
@@ -65,7 +64,7 @@ export default async function CommunityDetailPage({ params }: CommunityDetailPag
                 <div className="truncate text-sm font-bold text-text">{member.user.fullName}</div>
                 <div className="truncate text-xs text-muted">{member.user.headline}</div>
               </div>
-              <span className="flex-shrink-0 rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold capitalize text-muted">{member.role}</span>
+              {member.role === "owner" ? <span className="flex-shrink-0 rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold text-muted">Owner</span> : null}
             </Link>
           ))}
         </div>

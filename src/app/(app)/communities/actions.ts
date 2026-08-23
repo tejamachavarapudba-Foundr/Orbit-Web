@@ -11,20 +11,23 @@ export const createCommunityAction = async (_prevState: CreateCommunityState, fo
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Give your community a name." };
 
+  const memberIds = formData.getAll("memberIds").map(String).filter(Boolean);
+
   let community: { id: string };
   try {
     community = await apiFetch("/communities", {
       method: "POST",
-      body: { name, description: String(formData.get("description") ?? "").trim() }
+      body: { name, description: String(formData.get("description") ?? "").trim(), memberIds }
     });
   } catch {
     return { error: "Couldn't create that community — try again." };
   }
 
+  revalidatePath("/communities");
   redirect(`/communities/${community.id}`);
 };
 
-export const addMemberAction = async (communityId: string, userId: string) => {
-  await apiFetch(`/communities/${communityId}/members`, { method: "POST", body: { userIds: [userId] } });
+export const addMembersAction = async (communityId: string, userIds: string[]) => {
+  await apiFetch(`/communities/${communityId}/members`, { method: "POST", body: { userIds } });
   revalidatePath(`/communities/${communityId}`);
 };

@@ -1,13 +1,24 @@
 import Link from "next/link";
-import { Clock, Plus, Video } from "lucide-react";
+import { CheckCircle2, Clock, Plus, Video, XCircle } from "lucide-react";
 
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 import { getMe } from "@/lib/auth";
 import type { Meeting, MeetingProposal, MeetingsCancelled, MeetingsUpcoming } from "@/lib/types";
 
 import { CancelMeetingButton } from "./CancelMeetingButton";
+import { GoogleConnectCard } from "./GoogleConnectCard";
 import { RespondProposalForm } from "./RespondProposalForm";
 import { WithdrawButton } from "./WithdrawButton";
+
+const getGoogleConnected = async (): Promise<boolean> => {
+  try {
+    const status = await apiFetch<{ connected: boolean }>("/google/oauth/status");
+    return status.connected;
+  } catch (error) {
+    if (error instanceof ApiError) return false;
+    throw error;
+  }
+};
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +32,7 @@ const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
 
 type MeetingsPageProps = {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; status?: string }>;
 };
 
 const otherParty = (proposal: MeetingProposal, myId: string) =>
@@ -61,7 +72,7 @@ export default async function MeetingsPage({ searchParams }: MeetingsPageProps) 
   const params = await searchParams;
   const tab = (params.tab as (typeof tabs)[number]["key"]) ?? "upcoming";
 
-  const me = await getMe();
+  const [me, isGoogleConnected] = await Promise.all([getMe(), getGoogleConnected()]);
 
   return (
     <div className="max-w-160">
@@ -73,11 +84,25 @@ export default async function MeetingsPage({ searchParams }: MeetingsPageProps) 
           <h1 className="font-display text-lg font-bold text-text">My meetings</h1>
           <p className="text-xs text-muted">Requests, confirmed calls and past meetings</p>
         </div>
-        <Link href="/meetings/new" className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-2 text-xs font-bold text-on-primary shadow-md shadow-primary/25">
-          <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-          New meeting
-        </Link>
+        {isGoogleConnected ? (
+          <Link href="/meetings/new" className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-2 text-xs font-bold text-on-primary shadow-md shadow-primary/25">
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+            New meeting
+          </Link>
+        ) : null}
       </div>
+
+      {params.status === "success" ? (
+        <div className="glass mb-4 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm font-semibold text-success">
+          <CheckCircle2 className="h-4 w-4 flex-shrink-0" strokeWidth={2} />
+          Google Meet connected.
+        </div>
+      ) : params.status === "error" ? (
+        <div className="glass mb-4 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm font-semibold text-danger">
+          <XCircle className="h-4 w-4 flex-shrink-0" strokeWidth={2} />
+          Google connection failed — try again.
+        </div>
+      ) : null}
 
       <div className="glass mb-4 flex gap-1 rounded-2xl p-1.5">
         {tabs.map((t) => (
@@ -93,9 +118,15 @@ export default async function MeetingsPage({ searchParams }: MeetingsPageProps) 
         ))}
       </div>
 
-      {tab === "upcoming" ? <UpcomingTab myId={me.id} /> : null}
-      {tab === "completed" ? <CompletedTab myId={me.id} /> : null}
-      {tab === "cancelled" ? <CancelledTab myId={me.id} /> : null}
+      {!isGoogleConnected ? (
+        <GoogleConnectCard />
+      ) : (
+        <>
+          {tab === "upcoming" ? <UpcomingTab myId={me.id} /> : null}
+          {tab === "completed" ? <CompletedTab myId={me.id} /> : null}
+          {tab === "cancelled" ? <CancelledTab myId={me.id} /> : null}
+        </>
+      )}
     </div>
   );
 }

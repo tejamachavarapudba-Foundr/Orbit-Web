@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Bookmark, Calendar, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Users, Video } from "lucide-react";
+import { Bell, Bookmark, Calendar, Compass, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Users, Video } from "lucide-react";
 
 import { logoutAction } from "@/app/(app)/actions";
 import { CreatePostModal } from "@/components/CreatePostModal";
@@ -11,6 +11,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { Profile } from "@/lib/types";
 
 const menuItems = [
+  { href: "/discover", match: "/discover", label: "Discover", Icon: Compass, color: "from-violet-400 to-purple-500" },
   { href: "/network?tab=connections", match: "/network", label: "My network", Icon: Users, color: "from-sky-400 to-blue-500", badgeKey: "pending" as const },
   { href: "/meetings", match: "/meetings", label: "My meetings", Icon: Video, color: "from-cyan-400 to-sky-500" },
   { href: "/projects", match: "/projects", label: "My startups", Icon: Rocket, color: "from-orange-400 to-amber-500" },
