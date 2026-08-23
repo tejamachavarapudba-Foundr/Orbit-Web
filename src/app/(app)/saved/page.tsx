@@ -9,7 +9,6 @@ export const dynamic = "force-dynamic";
 
 export default async function SavedPage() {
   const [me, posts] = await Promise.all([getMe(), apiFetch<Post[]>("/posts/saved")]);
-  const initial = (me.profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
     <div className="max-w-160">
@@ -30,7 +29,16 @@ export default async function SavedPage() {
             <p className="mt-1 text-sm text-muted">Tap the bookmark icon on any post to save it for later.</p>
           </div>
         ) : (
-          posts.map((post) => <PostCard key={post.id} post={post} currentUserId={me.id} currentUserInitial={initial} initialSaved />)
+          posts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserId={me.id}
+              currentUserName={me.profile.fullName}
+              currentUserAvatarUrl={me.profile.avatarUrl}
+              initialSaved
+            />
+          ))
         )}
       </div>
     </div>

@@ -2,11 +2,9 @@ import Link from "next/link";
 import { UserPlus, Users } from "lucide-react";
 
 import { connectAction } from "@/app/(app)/u/[id]/actions";
+import { Avatar } from "@/components/Avatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { Profile } from "@/lib/types";
-
-const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "from-emerald-400 to-sky-500", "from-fuchsia-400 to-pink-500"];
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 type PeopleYouMayKnowProps = {
   people: Profile[];
@@ -30,11 +28,7 @@ export const PeopleYouMayKnow = ({ people }: PeopleYouMayKnowProps) => {
         {people.slice(0, 4).map((person, index) => (
           <div key={person.id} className={`flex items-center gap-2.5 py-2.5 ${index > 0 ? "border-t border-border/60" : ""}`}>
             <Link href={`/u/${person.id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
-              <div
-                className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-xs font-bold text-white ${gradientFor(person.id)}`}
-              >
-                {(person.fullName || "?").charAt(0).toUpperCase()}
-              </div>
+              <Avatar id={person.id} name={person.fullName} avatarUrl={person.avatarUrl} size="h-9 w-9" textSize="text-xs" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1 text-xs font-bold text-text">
                   <span className="truncate">{person.fullName || "Unnamed"}</span>

@@ -11,6 +11,10 @@ export const createEventAction = async (_prevState: CreateEventState, formData: 
   const title = String(formData.get("title") ?? "").trim();
   const location = String(formData.get("location") ?? "").trim();
   const startsAt = String(formData.get("startsAt") ?? "");
+  const endsAt = String(formData.get("endsAt") ?? "");
+  const isPrivate = formData.get("isPrivate") === "true";
+  const communityId = String(formData.get("communityId") ?? "").trim();
+  const inviteeIds = formData.getAll("inviteeIds").map(String).filter(Boolean);
 
   if (!title || !location || !startsAt) {
     return { error: "Title, location and start time are required." };
@@ -24,7 +28,11 @@ export const createEventAction = async (_prevState: CreateEventState, formData: 
         title,
         location,
         startsAt: new Date(startsAt).toISOString(),
-        description: String(formData.get("description") ?? "").trim()
+        endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
+        description: String(formData.get("description") ?? "").trim(),
+        isPrivate,
+        communityId: isPrivate && communityId ? communityId : undefined,
+        inviteeIds: isPrivate && inviteeIds.length > 0 ? inviteeIds : undefined
       }
     });
   } catch {
@@ -38,4 +46,51 @@ export const rsvpAction = async (eventId: string) => {
   await apiFetch(`/events/${eventId}/rsvp`, { method: "POST" });
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
+};
+
+export type UpdateLocationState = { error: string | null };
+
+export const updateEventLocationAction = async (
+  eventId: string,
+  _prevState: UpdateLocationState,
+  formData: FormData
+): Promise<UpdateLocationState> => {
+  const location = String(formData.get("location") ?? "").trim();
+  if (!location) return { error: "Location is required." };
+
+  try {
+    await apiFetch(`/events/${eventId}`, {
+      method: "PATCH",
+      body: { location }
+    });
+  } catch {
+    return { error: "Couldn't update the location — try again." };
+  }
+
+  revalidatePath(`/events/${eventId}`);
+  return { error: null };
+};
+
+export type CancelEventState = { error: string | null };
+
+export const cancelEventAction = async (
+  eventId: string,
+  _prevState: CancelEventState,
+  formData: FormData
+): Promise<CancelEventState> => {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!reason) return { error: "Add a reason for cancelling." };
+
+  try {
+    await apiFetch(`/events/${eventId}`, {
+      method: "DELETE",
+      body: { Reason: reason }
+    });
+  } catch {
+    return { error: "Couldn't cancel that event — try again." };
+  }
+
+  revalidatePath(`/events/${eventId}`);
+  revalidatePath("/events");
+  return { error: null };
 };

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Bookmark, Briefcase, Globe, MapPin, Star, Users } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
+import { Avatar } from "@/components/Avatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, StartupDetail } from "@/lib/types";
@@ -120,9 +121,7 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
           <div className="flex flex-col divide-y divide-border/60">
             {startup.members.map((member) => (
               <Link key={member.id} href={`/u/${member.user.id}`} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 hover:opacity-80">
-                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-xs font-bold text-white ${gradientFor(member.user.id)}`}>
-                  {(member.user.fullName || "?").charAt(0).toUpperCase()}
-                </div>
+                <Avatar id={member.user.id} name={member.user.fullName} avatarUrl={member.user.avatarUrl} size="h-9 w-9" textSize="text-xs" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-bold text-text">{member.user.fullName}</div>
                   <div className="truncate text-xs text-muted">{member.user.headline}</div>

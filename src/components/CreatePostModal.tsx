@@ -4,18 +4,21 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
 
 import { createPostAction, type CreatePostState } from "@/app/(app)/actions";
+import { Avatar } from "@/components/Avatar";
 
 const initialState: CreatePostState = { error: null };
 
 type CreatePostModalProps = {
-  initial: string;
+  authorId: string;
+  fullName: string;
+  avatarUrl?: string | null;
   open: boolean;
   onClose: () => void;
 };
 
 type PickedFile = { file: File; previewUrl: string };
 
-export const CreatePostModal = ({ initial, open, onClose }: CreatePostModalProps) => {
+export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }: CreatePostModalProps) => {
   const [state, formAction, isPending] = useActionState(createPostAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,9 +87,7 @@ export const CreatePostModal = ({ initial, open, onClose }: CreatePostModalProps
         </div>
 
         <form ref={formRef} action={formAction} className="mt-4 flex gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-500 font-display text-sm font-bold text-white">
-            {initial}
-          </div>
+          <Avatar id={authorId} name={fullName} avatarUrl={avatarUrl} size="h-10 w-10" />
           <div className="min-w-0 flex-1">
             <textarea
               name="content"

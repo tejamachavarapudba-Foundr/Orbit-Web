@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
 
+import { Avatar } from "@/components/Avatar";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getMe } from "@/lib/auth";
 import type { CommunityDetail, Profile } from "@/lib/types";
@@ -9,9 +10,6 @@ import type { CommunityDetail, Profile } from "@/lib/types";
 import { AddMemberForm } from "./AddMemberForm";
 
 export const dynamic = "force-dynamic";
-
-const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "from-emerald-400 to-sky-500", "from-fuchsia-400 to-pink-500"];
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 type CommunityDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -57,9 +55,7 @@ export default async function CommunityDetailPage({ params }: CommunityDetailPag
         <div className="flex flex-col divide-y divide-border/60">
           {community.members.map((member) => (
             <Link key={member.id} href={`/u/${member.user.id}`} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 hover:opacity-80">
-              <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-xs font-bold text-white ${gradientFor(member.user.id)}`}>
-                {(member.user.fullName || "?").charAt(0).toUpperCase()}
-              </div>
+              <Avatar id={member.user.id} name={member.user.fullName} avatarUrl={member.user.avatarUrl} size="h-9 w-9" textSize="text-xs" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-bold text-text">{member.user.fullName}</div>
                 <div className="truncate text-xs text-muted">{member.user.headline}</div>

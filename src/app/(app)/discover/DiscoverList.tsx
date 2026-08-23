@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Search, UserCheck, UserPlus } from "lucide-react";
 
 import { acceptRequestAction, cancelRequestAction, connectAction, declineRequestAction } from "@/app/(app)/u/[id]/actions";
+import { Avatar } from "@/components/Avatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { ConnectedProfile, IncomingRequest, OutgoingRequest, Profile } from "@/lib/types";
 
@@ -21,9 +22,6 @@ const roleFilters = [
   { label: "Product Manager", value: "product_manager" },
   { label: "Other", value: "other" }
 ] as const;
-
-const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "from-emerald-400 to-sky-500", "from-fuchsia-400 to-pink-500"];
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 const formatRole = (role: string) => role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -180,9 +178,7 @@ export const DiscoverList = ({ people, incoming, outgoing, connections }: Discov
               <div key={p.id} className="glass flex flex-col gap-2 rounded-2xl p-4">
                 <Link href={`/u/${p.id}`} className="flex items-center gap-2.5">
                   <div className="relative flex-shrink-0">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br font-display text-sm font-bold text-white ${gradientFor(p.id)}`}>
-                      {(p.fullName || "?").charAt(0).toUpperCase()}
-                    </div>
+                    <Avatar id={p.id} name={p.fullName} avatarUrl={p.avatarUrl} size="h-11 w-11" />
                     {p.openToConnect ? <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-surface bg-success" /> : null}
                   </div>
                   <div className="min-w-0 flex-1">

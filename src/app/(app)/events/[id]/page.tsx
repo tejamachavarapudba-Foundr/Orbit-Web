@@ -3,15 +3,14 @@ import { notFound } from "next/navigation";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
+import { Avatar } from "@/components/Avatar";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, EventAttendee, EventItem } from "@/lib/types";
 
 import { rsvpAction } from "../actions";
+import { EventHostTools } from "./EventHostTools";
 
 export const dynamic = "force-dynamic";
-
-const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "from-emerald-400 to-sky-500", "from-fuchsia-400 to-pink-500"];
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
@@ -62,6 +61,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
         {event.description ? <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-text">{event.description}</p> : null}
 
+        {isCancelled && event.cancellationReason ? (
+          <p className="mt-3 text-sm font-semibold text-danger">Cancelled: {event.cancellationReason}</p>
+        ) : null}
+
         {!isHost && !isCancelled ? (
           <form action={rsvpAction.bind(null, id)} className="mt-5">
             <button
@@ -88,9 +91,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           <div className="flex flex-col divide-y divide-border/60">
             {attendees.map((a) => (
               <Link key={a.id} href={`/u/${a.id}`} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 hover:opacity-80">
-                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-xs font-bold text-white ${gradientFor(a.id)}`}>
-                  {(a.fullName || "?").charAt(0).toUpperCase()}
-                </div>
+                <Avatar id={a.id} name={a.fullName} avatarUrl={a.avatarUrl} size="h-9 w-9" textSize="text-xs" />
                 <div className="min-w-0">
                   <div className="truncate text-sm font-bold text-text">{a.fullName}</div>
                   <div className="truncate text-xs text-muted">{a.headline || a.company}</div>
@@ -100,6 +101,8 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           </div>
         )}
       </div>
+
+      {isHost ? <EventHostTools eventId={id} location={event.location} isCancelled={isCancelled} /> : null}
     </div>
   );
 }

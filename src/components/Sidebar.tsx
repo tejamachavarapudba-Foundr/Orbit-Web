@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Bell, Bookmark, Calendar, Compass, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Users, Video } from "lucide-react";
 
 import { logoutAction } from "@/app/(app)/actions";
+import { Avatar } from "@/components/Avatar";
 import { CreatePostModal } from "@/components/CreatePostModal";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { Profile } from "@/lib/types";
@@ -39,15 +40,20 @@ const iconChipClass = (color: string) => `flex h-7 w-7 flex-shrink-0 items-cente
 export const Sidebar = ({ profile, isAdmin, pendingRequests, unreadNotifications, connectionsCount, followingCount }: SidebarProps) => {
   const pathname = usePathname();
   const [isComposerOpen, setIsComposerOpen] = useState(false);
-  const initial = (profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
     <>
       <div className="glass w-64 flex-shrink-0 overflow-hidden rounded-2xl">
         <div className="h-10 bg-gradient-to-r from-primary via-indigo-400 to-purple-400" />
         <Link href="/profile" className="block px-3.5 pb-3 pt-0 hover:opacity-95">
-          <div className="-mt-5 flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-surface bg-gradient-to-br from-orange-400 to-rose-500 font-display text-sm font-bold text-white shadow-md shadow-rose-500/20">
-            {initial}
+          <div className="-mt-5">
+            <Avatar
+              id={profile.id}
+              name={profile.fullName}
+              avatarUrl={profile.avatarUrl}
+              size="h-11 w-11"
+              className="border-[3px] border-surface shadow-md shadow-primary/20"
+            />
           </div>
           <div className="mt-2 flex items-center gap-1.5">
             <span className="truncate font-display text-sm font-bold text-text">{profile.fullName || "Your name"}</span>
@@ -131,7 +137,13 @@ export const Sidebar = ({ profile, isAdmin, pendingRequests, unreadNotifications
         </form>
       </div>
 
-      <CreatePostModal initial={initial} open={isComposerOpen} onClose={() => setIsComposerOpen(false)} />
+      <CreatePostModal
+        authorId={profile.id}
+        fullName={profile.fullName}
+        avatarUrl={profile.avatarUrl}
+        open={isComposerOpen}
+        onClose={() => setIsComposerOpen(false)}
+      />
     </>
   );
 };

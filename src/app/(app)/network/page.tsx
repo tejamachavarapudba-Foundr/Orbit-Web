@@ -2,21 +2,13 @@ import Link from "next/link";
 import { UserCheck, UserPlus, Users } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
+import { Avatar } from "@/components/Avatar";
 import { apiFetch } from "@/lib/api";
 import type { AuthMe, ConnectedProfile, ConnectionProfile, IncomingRequest, OutgoingRequest } from "@/lib/types";
 
 import { acceptRequestAction, cancelRequestAction, declineRequestAction, followAction, unfollowAction } from "../u/[id]/actions";
 
 export const dynamic = "force-dynamic";
-
-const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "from-emerald-400 to-sky-500", "from-fuchsia-400 to-pink-500"];
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
-
-const Avatar = ({ id, name, size = "h-11 w-11" }: { id: string; name: string; size?: string }) => (
-  <div className={`flex ${size} flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-sm font-bold text-white ${gradientFor(id)}`}>
-    {(name || "?").charAt(0).toUpperCase()}
-  </div>
-);
 
 type NetworkPageProps = {
   searchParams: Promise<{ tab?: string }>;
@@ -86,7 +78,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
                 {incoming.map((req) => (
                   <div key={req.id} className="flex items-center gap-3">
                     <Link href={`/u/${req.requester.id}`}>
-                      <Avatar id={req.requester.id} name={req.requester.fullName} />
+                      <Avatar id={req.requester.id} name={req.requester.fullName} avatarUrl={req.requester.avatarUrl} size="h-11 w-11" />
                     </Link>
                     <div className="min-w-0 flex-1">
                       <Link href={`/u/${req.requester.id}`} className="truncate text-sm font-bold text-text hover:underline">
@@ -117,7 +109,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
                 {outgoing.map((req) => (
                   <div key={req.id} className="flex items-center gap-3">
                     <Link href={`/u/${req.recipient.id}`}>
-                      <Avatar id={req.recipient.id} name={req.recipient.fullName} />
+                      <Avatar id={req.recipient.id} name={req.recipient.fullName} avatarUrl={req.recipient.avatarUrl} size="h-11 w-11" />
                     </Link>
                     <div className="min-w-0 flex-1">
                       <Link href={`/u/${req.recipient.id}`} className="truncate text-sm font-bold text-text hover:underline">
@@ -146,7 +138,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
             <div className="flex flex-col divide-y divide-border/60">
               {connections.map((c) => (
                 <Link key={c.connectionId} href={`/u/${c.profile.id}`} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 hover:opacity-80">
-                  <Avatar id={c.profile.id} name={c.profile.fullName} />
+                  <Avatar id={c.profile.id} name={c.profile.fullName} avatarUrl={c.profile.avatarUrl} size="h-11 w-11" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-bold text-text">{c.profile.fullName || "Unnamed"}</div>
                     <div className="truncate text-xs text-muted">{c.profile.headline}</div>
@@ -167,7 +159,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
               {following.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
                   <Link href={`/u/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
-                    <Avatar id={p.id} name={p.fullName} />
+                    <Avatar id={p.id} name={p.fullName} avatarUrl={p.avatarUrl} size="h-11 w-11" />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-bold text-text">{p.fullName || "Unnamed"}</div>
                       <div className="truncate text-xs text-muted">{p.headline}</div>
@@ -196,7 +188,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
                 return (
                   <div key={p.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
                     <Link href={`/u/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
-                      <Avatar id={p.id} name={p.fullName} />
+                      <Avatar id={p.id} name={p.fullName} avatarUrl={p.avatarUrl} size="h-11 w-11" />
                       <div className="min-w-0">
                         <div className="truncate text-sm font-bold text-text">{p.fullName || "Unnamed"}</div>
                         <div className="truncate text-xs text-muted">{p.headline}</div>

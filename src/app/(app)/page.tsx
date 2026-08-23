@@ -71,8 +71,6 @@ export default async function HomePage() {
     loadPeopleYouMayKnow(me.id)
   ]);
 
-  const initial = (me.profile.fullName || "?").charAt(0).toUpperCase();
-
   return (
     <div className="grid max-w-220 grid-cols-[minmax(0,1fr)_300px] items-start gap-5">
       <div className="flex min-w-0 flex-col gap-4">
@@ -83,7 +81,14 @@ export default async function HomePage() {
           </div>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.id} post={post} currentUserId={me.id} currentUserInitial={initial} initialSaved={savedIds.has(post.id)} />
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserId={me.id}
+              currentUserName={me.profile.fullName}
+              currentUserAvatarUrl={me.profile.avatarUrl}
+              initialSaved={savedIds.has(post.id)}
+            />
           ))
         )}
       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bell, Briefcase, Home, MessageSquare, Search, Users } from "lucide-react";
 
+import { Avatar } from "@/components/Avatar";
 import type { Profile } from "@/lib/types";
 
 const tabs = [
@@ -16,8 +17,6 @@ type TopNavProps = {
 };
 
 export const TopNav = ({ profile, unreadNotifications = 0 }: TopNavProps) => {
-  const initial = (profile.fullName || "?").charAt(0).toUpperCase();
-
   return (
     <header className="glass sticky top-0 z-40 flex h-16 items-center gap-5 border-x-0 border-t-0 px-5">
       <Link href="/" className="flex flex-shrink-0 items-center gap-2 font-display text-lg font-bold text-text">
@@ -69,12 +68,8 @@ export const TopNav = ({ profile, unreadNotifications = 0 }: TopNavProps) => {
         ) : null}
       </Link>
 
-      <Link
-        href="/profile"
-        aria-label="Your profile"
-        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-500 font-display text-xs font-bold text-white shadow-md shadow-rose-500/20"
-      >
-        {initial}
+      <Link href="/profile" aria-label="Your profile" className="flex-shrink-0 rounded-full shadow-md shadow-primary/20">
+        <Avatar id={profile.id} name={profile.fullName} avatarUrl={profile.avatarUrl} size="h-9 w-9" textSize="text-xs" />
       </Link>
     </header>
   );

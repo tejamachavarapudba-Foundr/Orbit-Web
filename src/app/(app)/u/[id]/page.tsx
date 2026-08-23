@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Briefcase, ExternalLink, Globe, MapPin, MessageCircle, UserCheck, UserPlus, Users } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
+import { Avatar } from "@/components/Avatar";
 import { PostCard } from "@/components/PostCard";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch, ApiError } from "@/lib/api";
@@ -11,9 +12,6 @@ import type { AuthMe, ConnectionStatus, Post, Profile } from "@/lib/types";
 import { acceptRequestAction, cancelRequestAction, connectAction, declineRequestAction, messageAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-
-const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "from-emerald-400 to-sky-500", "from-fuchsia-400 to-pink-500"];
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 type ProfilePageProps = {
   params: Promise<{ id: string }>;
@@ -40,19 +38,20 @@ export default async function UserProfilePage({ params }: ProfilePageProps) {
 
   const posts = allPosts.filter((post) => post.author.id === id);
   const savedIds = new Set(savedPosts.map((post) => post.id));
-  const initial = (profile.fullName || "?").charAt(0).toUpperCase();
-  const myInitial = (me.profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
     <div className="max-w-160">
       <div className="glass overflow-hidden rounded-2xl">
         <div className="h-24 bg-gradient-to-r from-primary/80 via-indigo-400/70 to-purple-400/70" />
         <div className="-mt-9 px-5 pb-5">
-          <div
-            className={`flex h-18 w-18 items-center justify-center rounded-full border-[3px] border-surface bg-gradient-to-br font-display text-2xl font-bold text-white ${gradientFor(profile.id)}`}
-          >
-            {initial}
-          </div>
+          <Avatar
+            id={profile.id}
+            name={profile.fullName}
+            avatarUrl={profile.avatarUrl}
+            size="h-18 w-18"
+            textSize="text-2xl"
+            className="border-[3px] border-surface"
+          />
 
           <div className="mt-3 flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -162,7 +161,14 @@ export default async function UserProfilePage({ params }: ProfilePageProps) {
           <div className="glass rounded-2xl p-8 text-center text-sm text-muted">No posts yet.</div>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.id} post={post} currentUserId={me.id} currentUserInitial={myInitial} initialSaved={savedIds.has(post.id)} />
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserId={me.id}
+              currentUserName={me.profile.fullName}
+              currentUserAvatarUrl={me.profile.avatarUrl}
+              initialSaved={savedIds.has(post.id)}
+            />
           ))
         )}
       </div>

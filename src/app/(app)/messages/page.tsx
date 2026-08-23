@@ -2,13 +2,11 @@ import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
+import { Avatar } from "@/components/Avatar";
 import { apiFetch } from "@/lib/api";
 import type { AuthMe, Conversation, Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "from-emerald-400 to-sky-500", "from-fuchsia-400 to-pink-500"];
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 const formatRelativeTime = (value: string) => {
   const diffMs = Date.now() - new Date(value).getTime();
@@ -62,9 +60,7 @@ export default async function MessagesPage() {
               const lastMessage = conversation.messages?.[0];
               return (
                 <Link key={conversation.id} href={`/messages/${conversation.id}`} className="flex items-center gap-3 px-4 py-3.5 transition hover:bg-muted-bg/60">
-                  <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-sm font-bold text-white ${gradientFor(other.id)}`}>
-                    {(other.fullName || "?").charAt(0).toUpperCase()}
-                  </div>
+                  <Avatar id={other.id} name={other.fullName} avatarUrl={other.avatarUrl} size="h-11 w-11" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-bold text-text">{other.fullName || "Unknown"}</div>
                     <div className="truncate text-xs text-muted">{lastMessage ? lastMessage.content : "Say hello"}</div>

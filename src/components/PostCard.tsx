@@ -14,18 +14,9 @@ import {
   toggleSaveAction,
   updatePostAction
 } from "@/app/(app)/actions";
+import { Avatar } from "@/components/Avatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { Post, PostComment } from "@/lib/types";
-
-const gradients = [
-  "from-sky-400 to-indigo-500",
-  "from-amber-400 to-red-500",
-  "from-emerald-400 to-sky-500",
-  "from-fuchsia-400 to-pink-500",
-  "from-violet-400 to-purple-500"
-];
-
-const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 const formatRelativeTime = (value: string) => {
   const diffMs = Date.now() - new Date(value).getTime();
@@ -47,14 +38,14 @@ const gridCellClass = (index: number, total: number) => {
 type PostCardProps = {
   post: Post;
   currentUserId: string;
-  currentUserInitial?: string;
+  currentUserName?: string;
+  currentUserAvatarUrl?: string | null;
   initialSaved?: boolean;
 };
 
-export const PostCard = ({ post, currentUserId, currentUserInitial = "•", initialSaved = false }: PostCardProps) => {
+export const PostCard = ({ post, currentUserId, currentUserName = "", currentUserAvatarUrl, initialSaved = false }: PostCardProps) => {
   const router = useRouter();
   const isOwn = post.author.id === currentUserId;
-  const initial = (post.author.fullName || "?").charAt(0).toUpperCase();
 
   const [content, setContent] = useState(post.content);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -180,11 +171,8 @@ export const PostCard = ({ post, currentUserId, currentUserInitial = "•", init
     <article className="glass overflow-hidden rounded-2xl">
       <div className="p-4 pb-0">
         <div className="flex gap-2.5">
-          <Link
-            href={`/u/${post.author.id}`}
-            className={`flex h-10.5 w-10.5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-sm font-bold text-white ${gradientFor(post.author.id)}`}
-          >
-            {initial}
+          <Link href={`/u/${post.author.id}`} className="flex-shrink-0">
+            <Avatar id={post.author.id} name={post.author.fullName} avatarUrl={post.author.avatarUrl} size="h-10.5 w-10.5" />
           </Link>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
@@ -365,11 +353,7 @@ export const PostCard = ({ post, currentUserId, currentUserInitial = "•", init
             ) : (
               comments.map((comment) => (
                 <div key={comment.id} className="flex gap-2.5">
-                  <div
-                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-[11px] font-bold text-white ${gradientFor(comment.author.id)}`}
-                  >
-                    {(comment.author.fullName || "?").charAt(0).toUpperCase()}
-                  </div>
+                  <Avatar id={comment.author.id} name={comment.author.fullName} avatarUrl={comment.author.avatarUrl} size="h-8 w-8" textSize="text-[11px]" />
                   <div className="min-w-0 flex-1">
                     <div className="rounded-2xl bg-muted-bg/70 px-3 py-2">
                       <div className="flex items-center gap-1.5">
@@ -395,9 +379,7 @@ export const PostCard = ({ post, currentUserId, currentUserInitial = "•", init
           </div>
 
           <div className="mt-3 flex items-center gap-2.5">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-500 font-display text-[11px] font-bold text-white">
-              {currentUserInitial}
-            </div>
+            <Avatar id={currentUserId} name={currentUserName} avatarUrl={currentUserAvatarUrl} size="h-8 w-8" textSize="text-[11px]" />
             <input
               type="text"
               value={commentDraft}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Rocket, Search, Users } from "lucide-react";
 
+import { Avatar } from "@/components/Avatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
 import type { SearchResults } from "@/lib/types";
@@ -51,9 +52,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <div className="flex flex-col divide-y divide-border/60">
                   {results.users.map((user) => (
                     <Link key={user.id} href={`/u/${user.profile.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted-bg/60">
-                      <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display text-xs font-bold text-white ${gradientFor(user.profile.id)}`}>
-                        {(user.profile.fullName || "?").charAt(0).toUpperCase()}
-                      </div>
+                      <Avatar id={user.profile.id} name={user.profile.fullName} avatarUrl={user.profile.avatarUrl} size="h-10 w-10" textSize="text-xs" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
                           <span className="truncate text-sm font-bold text-text">{user.profile.fullName || "Unnamed"}</span>
