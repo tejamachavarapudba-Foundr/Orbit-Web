@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Bookmark, Calendar, Compass, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Users, Video } from "lucide-react";
+import { Bell, Bookmark, Calendar, Compass, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Star, Users, Video } from "lucide-react";
 
 import { logoutAction } from "@/app/(app)/actions";
 import { Avatar } from "@/components/Avatar";
@@ -15,19 +15,23 @@ const menuItems = [
   { href: "/discover", match: "/discover", label: "Discover", Icon: Compass, color: "from-violet-400 to-purple-500" },
   { href: "/network?tab=connections", match: "/network", label: "My network", Icon: Users, color: "from-sky-400 to-blue-500", badgeKey: "pending" as const },
   { href: "/meetings", match: "/meetings", label: "My meetings", Icon: Video, color: "from-cyan-400 to-sky-500" },
-  { href: "/projects", match: "/projects", label: "My startups", Icon: Rocket, color: "from-orange-400 to-amber-500" },
+  { href: "/watchlist", match: "/watchlist", label: "Investment Watchlist", Icon: Star, color: "from-yellow-400 to-amber-500", investorOnly: true as const },
+  { href: "/projects", match: "/projects", label: "My startups", Icon: Rocket, color: "from-orange-400 to-amber-500", badgeKey: "projects" as const },
   { href: "/communities", match: "/communities", label: "Community", Icon: Globe2, color: "from-emerald-400 to-teal-500" },
-  { href: "/events", match: "/events", label: "Events", Icon: Calendar, color: "from-rose-400 to-pink-500" },
+  { href: "/events", match: "/events", label: "Events", Icon: Calendar, color: "from-rose-400 to-pink-500", badgeKey: "events" as const },
   { href: "/saved", match: "/saved", label: "Saved posts", Icon: Bookmark, color: "from-amber-400 to-orange-500" }
 ] as const;
 
 type SidebarProps = {
   profile: Profile;
   isAdmin: boolean;
+  isInvestor: boolean;
   pendingRequests: number;
   unreadNotifications: number;
   connectionsCount: number;
   followingCount: number;
+  unreadProjects: number;
+  unreadEvents: number;
 };
 
 const rowClass = (active: boolean) =>
@@ -37,7 +41,17 @@ const rowClass = (active: boolean) =>
 
 const iconChipClass = (color: string) => `flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${color} text-white`;
 
-export const Sidebar = ({ profile, isAdmin, pendingRequests, unreadNotifications, connectionsCount, followingCount }: SidebarProps) => {
+export const Sidebar = ({
+  profile,
+  isAdmin,
+  isInvestor,
+  pendingRequests,
+  unreadNotifications,
+  connectionsCount,
+  followingCount,
+  unreadProjects,
+  unreadEvents
+}: SidebarProps) => {
   const pathname = usePathname();
   const [isComposerOpen, setIsComposerOpen] = useState(false);
 
@@ -80,8 +94,10 @@ export const Sidebar = ({ profile, isAdmin, pendingRequests, unreadNotifications
           </button>
 
           {menuItems.map(({ href, match, label, Icon, color, ...rest }) => {
+            if ("investorOnly" in rest && rest.investorOnly && !isInvestor) return null;
             const active = pathname === match;
-            const badge = "badgeKey" in rest && rest.badgeKey === "pending" ? pendingRequests : 0;
+            const badgeKey = "badgeKey" in rest ? rest.badgeKey : undefined;
+            const badge = badgeKey === "pending" ? pendingRequests : badgeKey === "projects" ? unreadProjects : badgeKey === "events" ? unreadEvents : 0;
             return (
               <Link key={href} href={href} className={rowClass(active)}>
                 <span className="flex min-w-0 items-center gap-3">

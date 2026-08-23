@@ -71,6 +71,13 @@ export type TrendingStartup = {
   founderVerified?: boolean;
 };
 
+export type SavedStartup = {
+  id: string;
+  projectId: string;
+  createdAt: string;
+  project: TrendingStartup;
+};
+
 export type StartupDetail = TrendingStartup & {
   description?: string;
   website?: string;

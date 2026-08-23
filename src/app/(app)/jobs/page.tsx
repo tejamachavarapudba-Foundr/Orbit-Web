@@ -2,14 +2,17 @@ import Link from "next/link";
 import { Briefcase, MapPin, Plus } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
+import { JOB_NOTIFICATION_TYPES } from "@/lib/notificationCategories";
 import type { Job } from "@/lib/types";
+
+import { markCategoryReadAction } from "../notifications/actions";
 
 export const dynamic = "force-dynamic";
 
 const formatDate = (value: string) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(value));
 
 export default async function JobsPage() {
-  const jobs = await apiFetch<Job[]>("/jobs");
+  const [jobs] = await Promise.all([apiFetch<Job[]>("/jobs"), markCategoryReadAction(JOB_NOTIFICATION_TYPES)]);
 
   return (
     <div className="max-w-160">

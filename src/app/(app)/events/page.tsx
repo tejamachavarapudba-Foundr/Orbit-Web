@@ -3,14 +3,20 @@ import { Calendar, Plus } from "lucide-react";
 
 import { apiFetch, ApiError } from "@/lib/api";
 import { getMe } from "@/lib/auth";
+import { EVENT_NOTIFICATION_TYPES } from "@/lib/notificationCategories";
 import type { EventAttendee, EventItem } from "@/lib/types";
 
+import { markCategoryReadAction } from "../notifications/actions";
 import { EventsList } from "./EventsList";
 
 export const dynamic = "force-dynamic";
 
 export default async function EventsPage() {
-  const [me, events] = await Promise.all([getMe(), apiFetch<EventItem[]>("/events")]);
+  const [me, events] = await Promise.all([
+    getMe(),
+    apiFetch<EventItem[]>("/events"),
+    markCategoryReadAction(EVENT_NOTIFICATION_TYPES)
+  ]);
 
   const withStatus = await Promise.all(
     events.map(async (event) => {

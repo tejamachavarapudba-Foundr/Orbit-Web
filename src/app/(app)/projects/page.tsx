@@ -6,6 +6,9 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
 import type { AuthMe, TrendingStartup } from "@/lib/types";
 
+import { markCategoryReadAction } from "../notifications/actions";
+import { PROJECT_NOTIFICATION_TYPES } from "@/lib/notificationCategories";
+
 export const dynamic = "force-dynamic";
 
 type ProjectRow = TrendingStartup & { ownerId: string };
@@ -31,7 +34,11 @@ const StartupCard = ({ startup }: { startup: ProjectRow }) => (
 );
 
 export default async function ProjectsPage() {
-  const [me, all] = await Promise.all([getMe(), apiFetch<ProjectRow[]>("/projects")]);
+  const [me, all] = await Promise.all([
+    getMe(),
+    apiFetch<ProjectRow[]>("/projects"),
+    markCategoryReadAction(PROJECT_NOTIFICATION_TYPES)
+  ]);
 
   const mine = all.filter((p) => p.ownerId === me.id);
   const explore = all.filter((p) => p.ownerId !== me.id);

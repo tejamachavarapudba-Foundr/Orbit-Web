@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 
-import { sendMessageAction } from "../actions";
+import { getMessagesAction, markMessagesReadAction, sendMessageAction } from "../actions";
 import type { Message } from "@/lib/types";
 
 const formatTime = (value: string) => new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
@@ -15,30 +14,58 @@ type MessageThreadProps = {
   currentUserId: string;
 };
 
-export const MessageThread = ({ conversationId, messages, currentUserId }: MessageThreadProps) => {
-  const router = useRouter();
+export const MessageThread = ({ conversationId, messages: initialMessages, currentUserId }: MessageThreadProps) => {
+  const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
   const [isPending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const markedReadRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    setMessages(initialMessages);
+    markedReadRef.current = new Set();
+  }, [conversationId, initialMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
 
-  // Lightweight polling stand-in for real-time delivery — refreshes the
-  // Server Component's data every few seconds while a thread is open.
   useEffect(() => {
-    const interval = setInterval(() => router.refresh(), 4000);
-    return () => clearInterval(interval);
-  }, [router]);
+    const unseen = messages.filter((m) => m.senderId !== currentUserId && !m.readAt && !markedReadRef.current.has(m.id));
+    if (unseen.length === 0) return;
+    unseen.forEach((m) => markedReadRef.current.add(m.id));
+    void markMessagesReadAction(unseen, currentUserId);
+  }, [messages, currentUserId]);
+
+  // Polls just the message list for this thread — not a full-page refresh —
+  // so it can't interrupt an in-flight navigation or re-run the app shell's
+  // sidebar/counter queries every few seconds (that combination was the
+  // cause of the reported freezing and broken navigation while a thread was open).
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      if (document.hidden) return;
+      try {
+        const fresh = await getMessagesAction(conversationId);
+        if (!cancelled) setMessages(fresh);
+      } catch {
+        // transient network hiccup — next tick will retry
+      }
+    };
+    const interval = setInterval(tick, 6000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [conversationId]);
 
   const send = () => {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
     startTransition(async () => {
-      await sendMessageAction(conversationId, text);
-      router.refresh();
+      const sent = await sendMessageAction(conversationId, text);
+      if (sent) setMessages((prev) => [...prev, sent]);
     });
   };
 

@@ -4,8 +4,10 @@ import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
 import { apiFetch } from "@/lib/api";
+import { CONNECTION_NOTIFICATION_TYPES } from "@/lib/notificationCategories";
 import type { AuthMe, ConnectedProfile, ConnectionProfile, IncomingRequest, OutgoingRequest } from "@/lib/types";
 
+import { markCategoryReadAction } from "../notifications/actions";
 import { acceptRequestAction, cancelRequestAction, declineRequestAction, followAction, unfollowAction } from "../u/[id]/actions";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +33,8 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
     apiFetch<OutgoingRequest[]>("/connections/requests/outgoing"),
     apiFetch<ConnectedProfile[]>(`/connections/${me.id}`),
     apiFetch<ConnectionProfile[]>(`/follows/following/${me.id}`),
-    apiFetch<ConnectionProfile[]>(`/follows/followers/${me.id}`)
+    apiFetch<ConnectionProfile[]>(`/follows/followers/${me.id}`),
+    markCategoryReadAction(CONNECTION_NOTIFICATION_TYPES)
   ]);
 
   const followingIds = new Set(following.map((p) => p.id));

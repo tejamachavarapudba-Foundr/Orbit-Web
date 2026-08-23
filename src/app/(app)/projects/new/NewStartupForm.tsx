@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { Video, X } from "lucide-react";
 
 import { createProjectAction, type CreateProjectState } from "../actions";
 
@@ -36,9 +37,32 @@ const inputClass =
 
 export const NewStartupForm = () => {
   const [state, formAction, isPending] = useActionState(createProjectAction, initialState);
+  const [showPitchTip, setShowPitchTip] = useState(true);
 
   return (
-    <form action={formAction} className="glass flex flex-col gap-4 rounded-2xl p-6">
+    <>
+      {showPitchTip ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+          <div className="glass-strong w-full max-w-sm rounded-2xl p-5 text-center">
+            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
+              <Video className="h-5 w-5" strokeWidth={2} />
+            </span>
+            <h2 className="mt-3 font-display text-base font-bold text-text">Before you start</h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted">
+              Make sure your pitch video is within 30–45 seconds — that&apos;s the sweet spot for investors to quickly find your potential.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowPitchTip(false)}
+              className="mt-4 w-full rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-2.5 text-sm font-bold text-on-primary shadow-md shadow-primary/25"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <form action={formAction} className="glass flex flex-col gap-4 rounded-2xl p-6">
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-semibold text-text">Startup name</span>
         <input name="name" required placeholder="e.g. Orbit" className={inputClass} />
@@ -95,6 +119,12 @@ export const NewStartupForm = () => {
         </label>
       </div>
 
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold text-text">Pitch video URL</span>
+        <input name="pitchVideoUrl" placeholder="https://youtube.com/..." className={inputClass} />
+        <span className="text-xs text-muted">Keep it to 30–45 seconds — that&apos;s the sweet spot for investors to quickly find your potential.</span>
+      </label>
+
       {state.error ? <p className="text-sm font-medium text-danger">{state.error}</p> : null}
 
       <button
@@ -104,6 +134,7 @@ export const NewStartupForm = () => {
       >
         {isPending ? "Creating..." : "Create startup"}
       </button>
-    </form>
+      </form>
+    </>
   );
 };

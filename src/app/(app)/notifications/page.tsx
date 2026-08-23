@@ -1,6 +1,7 @@
-import { Bell, Briefcase, CheckCheck, MessageCircle, UserPlus, Users } from "lucide-react";
+import { Bell, CheckCheck, UserPlus, Users } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
+import { BELL_EXCLUDED_TYPES } from "@/lib/notificationCategories";
 import type { AppNotification } from "@/lib/types";
 
 import { markAllReadAction, markOneReadAction } from "./actions";
@@ -8,9 +9,7 @@ import { markAllReadAction, markOneReadAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 const iconFor = (type: string) => {
-  if (type === "NEW_MESSAGE") return MessageCircle;
-  if (type === "JOB_ALERT" || type === "APPLICATION_STATUS") return Briefcase;
-  if (type === "CONNECTION_REQUEST" || type === "CONNECTION_ACCEPTED") return UserPlus;
+  if (type === "CONNECTION_ACCEPTED") return UserPlus;
   if (type === "FOLLOW") return Users;
   return Bell;
 };
@@ -28,7 +27,10 @@ const formatRelativeTime = (value: string) => {
 };
 
 export default async function NotificationsPage() {
-  const notifications = await apiFetch<AppNotification[]>("/notifications");
+  const allNotifications = await apiFetch<AppNotification[]>("/notifications");
+  // Messages, projects, jobs, events and connection requests now have their
+  // own badge on the relevant nav icon instead of showing up here too.
+  const notifications = allNotifications.filter((n) => !BELL_EXCLUDED_TYPES.has(n.type));
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (

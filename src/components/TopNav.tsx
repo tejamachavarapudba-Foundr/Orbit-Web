@@ -7,16 +7,18 @@ import type { Profile } from "@/lib/types";
 const tabs = [
   { href: "/", label: "Home", Icon: Home },
   { href: "/network", label: "Network", Icon: Users },
-  { href: "/jobs", label: "Jobs", Icon: Briefcase },
-  { href: "/messages", label: "Messages", Icon: MessageSquare }
+  { href: "/jobs", label: "Jobs", Icon: Briefcase, badgeKey: "jobs" as const },
+  { href: "/messages", label: "Messages", Icon: MessageSquare, badgeKey: "messages" as const }
 ] as const;
 
 type TopNavProps = {
   profile: Profile;
   unreadNotifications?: number;
+  unreadMessages?: number;
+  unreadJobs?: number;
 };
 
-export const TopNav = ({ profile, unreadNotifications = 0 }: TopNavProps) => {
+export const TopNav = ({ profile, unreadNotifications = 0, unreadMessages = 0, unreadJobs = 0 }: TopNavProps) => {
   return (
     <header className="glass sticky top-0 z-40 flex h-16 items-center gap-5 border-x-0 border-t-0 px-5">
       <Link href="/" className="flex flex-shrink-0 items-center gap-2 font-display text-lg font-bold text-text">
@@ -45,16 +47,27 @@ export const TopNav = ({ profile, unreadNotifications = 0 }: TopNavProps) => {
       </form>
 
       <nav className="ml-auto flex items-center gap-1">
-        {tabs.map(({ href, label, Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex w-16 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10.5px] font-semibold text-muted transition hover:bg-muted-bg/70 hover:text-text"
-          >
-            <Icon className="h-5 w-5" strokeWidth={2} />
-            {label}
-          </Link>
-        ))}
+        {tabs.map(({ href, label, Icon, ...rest }) => {
+          const badgeKey = "badgeKey" in rest ? rest.badgeKey : undefined;
+          const badge = badgeKey === "messages" ? unreadMessages : badgeKey === "jobs" ? unreadJobs : 0;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className="flex w-16 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10.5px] font-semibold text-muted transition hover:bg-muted-bg/70 hover:text-text"
+            >
+              <span className="relative">
+                <Icon className="h-5 w-5" strokeWidth={2} />
+                {badge > 0 ? (
+                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                ) : null}
+              </span>
+              {label}
+            </Link>
+          );
+        })}
       </nav>
 
       <Link

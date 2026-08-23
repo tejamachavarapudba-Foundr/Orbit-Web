@@ -27,6 +27,7 @@ export const createProjectAction = async (_prevState: CreateProjectState, formDa
         description: String(formData.get("description") ?? "").trim(),
         location: String(formData.get("location") ?? "").trim(),
         websiteUrl: String(formData.get("websiteUrl") ?? "").trim(),
+        pitchVideoUrl: String(formData.get("pitchVideoUrl") ?? "").trim(),
         isPublished: true
       }
     });

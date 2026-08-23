@@ -4,7 +4,10 @@ import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
 import { apiFetch } from "@/lib/api";
+import { MESSAGE_NOTIFICATION_TYPES } from "@/lib/notificationCategories";
 import type { AuthMe, Conversation, Profile } from "@/lib/types";
+
+import { markCategoryReadAction } from "../notifications/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +24,11 @@ const formatRelativeTime = (value: string) => {
 };
 
 export default async function MessagesPage() {
-  const me = await getMe();
-  const conversations = await apiFetch<Conversation[]>("/chats");
+  const [me, conversations] = await Promise.all([
+    getMe(),
+    apiFetch<Conversation[]>("/chats"),
+    markCategoryReadAction(MESSAGE_NOTIFICATION_TYPES)
+  ]);
 
   const others = await Promise.all(
     conversations.map((c) => {
@@ -58,14 +64,18 @@ export default async function MessagesPage() {
           <div className="flex flex-col divide-y divide-border/60">
             {rows.map(({ conversation, other }) => {
               const lastMessage = conversation.messages?.[0];
+              const isUnread = Boolean(lastMessage && lastMessage.senderId !== me.id && !lastMessage.readAt);
               return (
                 <Link key={conversation.id} href={`/messages/${conversation.id}`} className="flex items-center gap-3 px-4 py-3.5 transition hover:bg-muted-bg/60">
                   <Avatar id={other.id} name={other.fullName} avatarUrl={other.avatarUrl} size="h-11 w-11" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold text-text">{other.fullName || "Unknown"}</div>
-                    <div className="truncate text-xs text-muted">{lastMessage ? lastMessage.content : "Say hello"}</div>
+                    <div className={`truncate text-sm text-text ${isUnread ? "font-bold" : "font-semibold"}`}>{other.fullName || "Unknown"}</div>
+                    <div className={`truncate text-xs ${isUnread ? "font-semibold text-text" : "text-muted"}`}>{lastMessage ? lastMessage.content : "Say hello"}</div>
                   </div>
-                  <span className="flex-shrink-0 text-[10.5px] text-muted">{formatRelativeTime(conversation.lastMessageAt)}</span>
+                  <span className="flex flex-shrink-0 flex-col items-end gap-1">
+                    <span className="text-[10.5px] text-muted">{formatRelativeTime(conversation.lastMessageAt)}</span>
+                    {isUnread ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
+                  </span>
                 </Link>
               );
             })}
