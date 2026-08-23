@@ -20,8 +20,23 @@ const loadTrending = async (): Promise<TrendingStartup[]> => {
   }
 };
 
+const loadSavedIds = async (): Promise<Set<string>> => {
+  try {
+    const saved = await apiFetch<Post[]>("/posts/saved");
+    return new Set(saved.map((post) => post.id));
+  } catch (error) {
+    if (error instanceof ApiError) return new Set();
+    throw error;
+  }
+};
+
 export default async function HomePage() {
-  const [me, posts, trending] = await Promise.all([apiFetch<AuthMe>("/auth/me"), apiFetch<Post[]>("/posts"), loadTrending()]);
+  const [me, posts, trending, savedIds] = await Promise.all([
+    apiFetch<AuthMe>("/auth/me"),
+    apiFetch<Post[]>("/posts"),
+    loadTrending(),
+    loadSavedIds()
+  ]);
 
   const initial = (me.profile.fullName || "?").charAt(0).toUpperCase();
 
@@ -39,7 +54,9 @@ export default async function HomePage() {
             <p className="mt-1 text-sm text-muted">Be the first to share an update.</p>
           </div>
         ) : (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
+          posts.map((post) => (
+            <PostCard key={post.id} post={post} currentUserId={me.id} currentUserInitial={initial} initialSaved={savedIds.has(post.id)} />
+          ))
         )}
       </main>
 

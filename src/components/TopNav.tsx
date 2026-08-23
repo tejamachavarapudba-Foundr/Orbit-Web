@@ -29,14 +29,15 @@ export const TopNav = ({ profile }: TopNavProps) => {
         Orbit
       </Link>
 
-      <div className="relative max-w-105 flex-1">
+      <form method="get" action="/search" className="relative max-w-105 flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" strokeWidth={2} />
         <input
           type="search"
+          name="q"
           placeholder="Search founders, startups, roles..."
           className="h-10 w-full rounded-full border border-border/70 bg-muted-bg/70 pl-9 pr-3 text-[13.5px] text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
         />
-      </div>
+      </form>
 
       <nav className="ml-auto flex items-center gap-1">
         {tabs.map(({ href, label, Icon }) => (

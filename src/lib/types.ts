@@ -6,10 +6,16 @@ export type Profile = {
   role: string;
   location: string;
   company: string;
+  website?: string;
+  linkedinUrl?: string;
+  skills?: string[];
+  lookingFor?: string[];
+  openToConnect?: boolean;
   avatarUrl: string;
   identityVerified?: boolean;
   profileCompletion?: number;
   onboardingCompleted?: boolean;
+  createdAt?: string;
 };
 
 export type AuthMe = {
@@ -46,6 +52,13 @@ export type Post = {
   comments: { id: string }[];
 };
 
+export type PostComment = {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: PostAuthor;
+};
+
 export type TrendingStartup = {
   id: string;
   name: string;
@@ -53,4 +66,131 @@ export type TrendingStartup = {
   stage: string;
   projectType: string;
   founderVerified?: boolean;
+};
+
+export type StartupDetail = TrendingStartup & {
+  description?: string;
+  website?: string;
+  location?: string;
+  industryTags?: string[];
+  techStack?: string[];
+  lookingFor?: string[];
+  createdAt: string;
+  owner: { id: string; fullName: string; headline: string; avatarUrl: string } | null;
+  members: { id: string; role: string; user: { id: string; fullName: string; avatarUrl: string; headline: string } }[];
+  applications: { id: string; status: string; applicantId: string }[];
+  reviews: { id: string; rating: number; comment: string; reviewerId: string }[];
+};
+
+export type ConnectionStatus = {
+  status: "self" | "connected" | "outgoing_pending" | "incoming_pending" | "none";
+  requestId?: string;
+};
+
+export type ConnectionProfile = { id: string; fullName: string; headline: string; avatarUrl: string };
+
+export type IncomingRequest = {
+  id: string;
+  status: string;
+  note: string;
+  createdAt: string;
+  requester: ConnectionProfile;
+};
+
+export type OutgoingRequest = {
+  id: string;
+  status: string;
+  note: string;
+  createdAt: string;
+  recipient: ConnectionProfile;
+};
+
+export type ConnectedProfile = {
+  connectionId: string;
+  connectedAt: string;
+  profile: ConnectionProfile;
+};
+
+export type Job = {
+  id: string;
+  startupName: string;
+  heading: string;
+  role: string;
+  experience: string;
+  skills: string[];
+  description: string;
+  posterId: string;
+  createdAt: string;
+  poster: Profile;
+  applications: { id: string; status: string; applicantId: string }[];
+};
+
+export type JobApplication = {
+  id: string;
+  status: "pending" | "accepted" | "rejected";
+  message: string;
+  createdAt: string;
+  applicant?: Profile;
+  job?: Job;
+};
+
+export type EventItem = {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  startsAt: string;
+  endsAt: string | null;
+  hostId: string;
+  isPrivate: boolean;
+  status: string;
+  cancellationReason?: string | null;
+  _count?: { attendees: number };
+};
+
+export type EventAttendee = { id: string; fullName: string; avatarUrl: string; headline: string; company: string };
+
+export type Community = {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  createdAt: string;
+  _count?: { members: number };
+};
+
+export type CommunityMember = {
+  id: string;
+  role: string;
+  userId: string;
+  joinedAt: string;
+  user: { id: string; fullName: string; avatarUrl: string; headline: string };
+};
+
+export type CommunityDetail = Community & { members: CommunityMember[] };
+
+export type Conversation = {
+  id: string;
+  userAId: string;
+  userBId: string;
+  lastMessageAt: string;
+  messages: Message[];
+};
+
+export type Message = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export type SearchResults = {
+  users: { id: string; email: string; profile: Profile }[];
+  projects: TrendingStartup[];
+  jobs: Job[];
+  events: EventItem[];
+  posts: Post[];
+  messages: Message[];
 };

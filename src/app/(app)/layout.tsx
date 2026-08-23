@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { TopNav } from "@/components/TopNav";
 import { ApiError, apiFetch } from "@/lib/api";
-import { clearSessionTokens, getSession } from "@/lib/session";
+import { getSession } from "@/lib/session";
 import type { AuthMe } from "@/lib/types";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     me = await apiFetch<AuthMe>("/auth/me");
   } catch (error) {
     if (error instanceof ApiError) {
-      await clearSessionTokens();
+      // Cookies can't be mutated during a Server Component render — just
+      // redirect. getSession()'s expiry check treats a stale cookie as
+      // signed-out, and it's overwritten on next successful login anyway.
       redirect("/login");
     }
     throw error;

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { clearSessionTokens, getAccessToken, getRefreshToken, setSessionTokens } from "@/lib/session";
+import { getAccessToken, getRefreshToken, setSessionTokens } from "@/lib/session";
 
 const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:3000/api";
 
@@ -61,7 +61,11 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
   if (res.status === 401 && !options.allowAnonymous) {
     const refreshed = await refreshAccessToken();
     if (!refreshed) {
-      await clearSessionTokens();
+      // Cookies can only be mutated from a Server Action or Route Handler —
+      // apiFetch is also called from plain Server Components (page data
+      // fetches), where clearing the session cookie here would crash the
+      // render. Just redirect; the stale cookie is overwritten on next login,
+      // and getSession()'s expiry check already treats it as signed-out.
       redirect("/login");
     }
     token = refreshed;

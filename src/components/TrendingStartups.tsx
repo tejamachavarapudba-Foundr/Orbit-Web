@@ -23,7 +23,7 @@ export const TrendingStartups = ({ startups }: TrendingStartupsProps) => {
     <div className="glass rounded-2xl p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <h3 className="font-display text-sm font-bold text-text">Trending startups</h3>
-        <Link href="/startups" className="text-[11.5px] font-bold text-primary">
+        <Link href="/projects" className="text-[11.5px] font-bold text-primary">
           See all
         </Link>
       </div>
