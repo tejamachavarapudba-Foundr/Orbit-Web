@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Rss, Users } from "lucide-react";
+import { UserCheck, UserPlus, Users } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
-import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
-import type { AuthMe, ConnectedProfile, ConnectionProfile, IncomingRequest, OutgoingRequest, Profile } from "@/lib/types";
+import type { AuthMe, ConnectedProfile, ConnectionProfile, IncomingRequest, OutgoingRequest } from "@/lib/types";
 
-import { acceptRequestAction, cancelRequestAction, connectAction, declineRequestAction, followAction, unfollowAction } from "../u/[id]/actions";
+import { acceptRequestAction, cancelRequestAction, declineRequestAction, followAction, unfollowAction } from "../u/[id]/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,29 +26,26 @@ const tabs = [
   { key: "requests", label: "Requests" },
   { key: "connections", label: "Connections" },
   { key: "following", label: "Following" },
-  { key: "discover", label: "Discover" }
+  { key: "followers", label: "Followers" }
 ] as const;
 
 export default async function NetworkPage({ searchParams }: NetworkPageProps) {
   const params = await searchParams;
   const tab = (params.tab as (typeof tabs)[number]["key"]) ?? "requests";
 
-  const me = await apiFetch<AuthMe>("/auth/me");
-  const [incoming, outgoing, connections, allProfiles, following] = await Promise.all([
+  const me = await getMe();
+  const [incoming, outgoing, connections, following, followers] = await Promise.all([
     apiFetch<IncomingRequest[]>("/connections/requests/incoming"),
     apiFetch<OutgoingRequest[]>("/connections/requests/outgoing"),
     apiFetch<ConnectedProfile[]>(`/connections/${me.id}`),
-    apiFetch<Profile[]>("/profiles"),
-    apiFetch<ConnectionProfile[]>(`/follows/following/${me.id}`)
+    apiFetch<ConnectionProfile[]>(`/follows/following/${me.id}`),
+    apiFetch<ConnectionProfile[]>(`/follows/followers/${me.id}`)
   ]);
 
-  const connectedIds = new Set(connections.map((c) => c.profile.id));
-  const pendingIds = new Set([...incoming.map((r) => r.requester.id), ...outgoing.map((r) => r.recipient.id)]);
   const followingIds = new Set(following.map((p) => p.id));
-  const discoverable = allProfiles.filter((p) => p.id !== me.id && !connectedIds.has(p.id) && !pendingIds.has(p.id));
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass mb-4 flex items-center gap-3.5 rounded-2xl px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
           <Users className="h-5 w-5" strokeWidth={2} />
@@ -56,7 +53,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
         <div>
           <h1 className="font-display text-lg font-bold text-text">My network</h1>
           <p className="text-xs text-muted">
-            {connections.length} connections · {following.length} following
+            {connections.length} connections · {following.length} following · {followers.length} followers
           </p>
         </div>
       </div>
@@ -144,7 +141,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
       {tab === "connections" ? (
         <div className="glass rounded-2xl p-4">
           {connections.length === 0 ? (
-            <p className="p-4 text-center text-sm text-muted">No connections yet — head to Discover to find people.</p>
+            <p className="p-4 text-center text-sm text-muted">No connections yet — search for people or check your Followers to get started.</p>
           ) : (
             <div className="flex flex-col divide-y divide-border/60">
               {connections.map((c) => (
@@ -164,7 +161,7 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
       {tab === "following" ? (
         <div className="glass rounded-2xl p-4">
           {following.length === 0 ? (
-            <p className="p-4 text-center text-sm text-muted">You&apos;re not following anyone yet — follow people from Discover to see their public activity.</p>
+            <p className="p-4 text-center text-sm text-muted">You&apos;re not following anyone yet.</p>
           ) : (
             <div className="flex flex-col divide-y divide-border/60">
               {following.map((p) => (
@@ -188,45 +185,47 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
         </div>
       ) : null}
 
-      {tab === "discover" ? (
-        <div className="grid grid-cols-2 gap-3">
-          {discoverable.length === 0 ? (
-            <div className="glass col-span-2 rounded-2xl p-8 text-center text-sm text-muted">No one new to discover right now.</div>
+      {tab === "followers" ? (
+        <div className="glass rounded-2xl p-4">
+          {followers.length === 0 ? (
+            <p className="p-4 text-center text-sm text-muted">No followers yet.</p>
           ) : (
-            discoverable.map((p) => (
-              <div key={p.id} className="glass flex flex-col items-center gap-2 rounded-2xl p-4 text-center">
-                <Link href={`/u/${p.id}`}>
-                  <Avatar id={p.id} name={p.fullName} size="h-14 w-14" />
-                </Link>
-                <div className="min-w-0">
-                  <div className="flex items-center justify-center gap-1">
-                    <Link href={`/u/${p.id}`} className="truncate text-sm font-bold text-text hover:underline">
-                      {p.fullName || "Unnamed"}
+            <div className="flex flex-col divide-y divide-border/60">
+              {followers.map((p) => {
+                const isFollowingBack = followingIds.has(p.id);
+                return (
+                  <div key={p.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                    <Link href={`/u/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                      <Avatar id={p.id} name={p.fullName} />
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-bold text-text">{p.fullName || "Unnamed"}</div>
+                        <div className="truncate text-xs text-muted">{p.headline}</div>
+                      </div>
                     </Link>
-                    {p.identityVerified ? <VerifiedBadge size="sm" /> : null}
+                    <form action={(isFollowingBack ? unfollowAction : followAction).bind(null, p.id)}>
+                      <button
+                        type="submit"
+                        className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
+                          isFollowingBack ? "border-border/70 text-text hover:bg-muted-bg/70" : "border-primary/40 text-primary hover:bg-primary-muted"
+                        }`}
+                      >
+                        {isFollowingBack ? (
+                          <>
+                            <UserCheck className="h-3.5 w-3.5" strokeWidth={2} />
+                            Following
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-3.5 w-3.5" strokeWidth={2} />
+                            Follow back
+                          </>
+                        )}
+                      </button>
+                    </form>
                   </div>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-muted">{p.headline || p.role}</p>
-                </div>
-                <div className="mt-1 flex w-full gap-1.5">
-                  <form action={connectAction.bind(null, p.id)} className="flex-1">
-                    <button type="submit" className="w-full rounded-full border border-primary/40 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary-muted">
-                      Connect
-                    </button>
-                  </form>
-                  <form action={(followingIds.has(p.id) ? unfollowAction : followAction).bind(null, p.id)}>
-                    <button
-                      type="submit"
-                      title={followingIds.has(p.id) ? "Unfollow" : "Follow"}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
-                        followingIds.has(p.id) ? "border-primary/40 bg-primary-muted text-primary" : "border-border/70 text-muted hover:bg-muted-bg/70"
-                      }`}
-                    >
-                      <Rss className="h-3.5 w-3.5" strokeWidth={2} />
-                    </button>
-                  </form>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
         </div>
       ) : null}

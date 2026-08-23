@@ -22,7 +22,7 @@ export const PeopleYouMayKnow = ({ people }: PeopleYouMayKnowProps) => {
           <Users className="h-3.5 w-3.5 text-muted" strokeWidth={2} />
           People you may know
         </h3>
-        <Link href="/network?tab=discover" className="text-[11.5px] font-bold text-primary">
+        <Link href="/search" className="text-[11.5px] font-bold text-primary">
           See all
         </Link>
       </div>

@@ -189,6 +189,49 @@ export type Message = {
   readAt: string | null;
 };
 
+export type MeetingParticipant = { id: string; fullName: string; avatarUrl: string };
+
+export type ProposedSlot = { date: string; time: string };
+
+export type ProposalInviteeRow = {
+  id: string;
+  userId: string;
+  response: "pending" | "accepted" | "rejected";
+  selectedSlot: ProposedSlot | null;
+  respondedAt: string | null;
+  user: MeetingParticipant;
+};
+
+export type MeetingProposal = {
+  id: string;
+  organizerId: string;
+  inviteMode: "startup" | "people";
+  targetStartupId: string | null;
+  purpose: string;
+  message: string | null;
+  schedulingMode: "availability_pick" | "date_push";
+  proposedSlots: ProposedSlot[] | null;
+  status: "pending" | "confirmed" | "declined" | "cancelled";
+  timezone: string;
+  createdAt: string;
+  organizer: MeetingParticipant;
+  invitees: ProposalInviteeRow[];
+};
+
+export type Meeting = {
+  id: string;
+  proposalId: string;
+  confirmedAt: string;
+  timezone: string;
+  durationMins: number;
+  meetLink: string | null;
+  status: "upcoming" | "completed" | "cancelled";
+  proposal: MeetingProposal;
+};
+
+export type MeetingsUpcoming = { meetings: Meeting[]; pendingProposals: MeetingProposal[] };
+export type MeetingsCancelled = { meetings: Meeting[]; proposals: MeetingProposal[] };
+
 export type VerificationStatus = {
   identityVerified: boolean;
   identityVerifiedAt: string | null;

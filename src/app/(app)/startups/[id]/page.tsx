@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bookmark, Briefcase, Globe, MapPin, Star, Users } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch, ApiError } from "@/lib/api";
@@ -31,7 +32,7 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
   }
 
   const [me, saved] = await Promise.all([
-    apiFetch<AuthMe>("/auth/me"),
+    getMe(),
     apiFetch<{ project: { id: string } }[]>("/projects/saved/list").catch(() => [])
   ]);
 
@@ -42,7 +43,7 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
   const avgRating = startup.reviews?.length ? startup.reviews.reduce((sum, r) => sum + r.rating, 0) / startup.reviews.length : 0;
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass overflow-hidden rounded-2xl">
         <div className="h-24 bg-gradient-to-r from-primary/80 via-indigo-400/70 to-purple-400/70" />
         <div className="-mt-9 px-5 pb-5">

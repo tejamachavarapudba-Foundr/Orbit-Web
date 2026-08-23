@@ -3,7 +3,7 @@ import { Bell, Briefcase, CheckCheck, MessageCircle, UserPlus, Users } from "luc
 import { apiFetch } from "@/lib/api";
 import type { AppNotification } from "@/lib/types";
 
-import { markAllReadAction } from "./actions";
+import { markAllReadAction, markOneReadAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,7 @@ export default async function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass mb-4 flex items-center gap-3.5 rounded-2xl px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-400 to-rose-500 text-on-primary">
           <Bell className="h-5 w-5" strokeWidth={2} />
@@ -61,8 +61,8 @@ export default async function NotificationsPage() {
           <div className="flex flex-col divide-y divide-border/60">
             {notifications.map((n) => {
               const Icon = iconFor(n.type);
-              return (
-                <div key={n.id} className={`flex gap-3 px-4 py-3.5 ${!n.isRead ? "bg-primary-muted/30" : ""}`}>
+              const row = (
+                <>
                   <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted-bg text-muted">
                     <Icon className="h-4 w-4" strokeWidth={2} />
                   </span>
@@ -72,7 +72,23 @@ export default async function NotificationsPage() {
                     <div className="mt-1 text-[10.5px] text-muted">{formatRelativeTime(n.createdAt)}</div>
                   </div>
                   {!n.isRead ? <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-primary" /> : null}
-                </div>
+                </>
+              );
+
+              if (n.isRead) {
+                return (
+                  <div key={n.id} className="flex gap-3 px-4 py-3.5">
+                    {row}
+                  </div>
+                );
+              }
+
+              return (
+                <form key={n.id} action={markOneReadAction.bind(null, n.id)}>
+                  <button type="submit" className="flex w-full gap-3 bg-primary-muted/30 px-4 py-3.5 text-left transition hover:bg-primary-muted/50">
+                    {row}
+                  </button>
+                </form>
               );
             })}
           </div>

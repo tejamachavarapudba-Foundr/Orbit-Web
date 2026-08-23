@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, CommunityDetail, ConnectedProfile } from "@/lib/types";
@@ -27,14 +28,14 @@ export default async function CommunityDetailPage({ params }: CommunityDetailPag
     throw error;
   }
 
-  const me = await apiFetch<AuthMe>("/auth/me");
+  const me = await getMe();
   const connections = await apiFetch<ConnectedProfile[]>(`/connections/${me.id}`).catch(() => [] as ConnectedProfile[]);
 
   const memberIds = new Set(community.members.map((m) => m.userId));
   const candidates = connections.filter((c) => !memberIds.has(c.profile.id));
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass rounded-2xl p-6">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 font-display text-xl font-bold text-white">
           {community.name.charAt(0).toUpperCase()}

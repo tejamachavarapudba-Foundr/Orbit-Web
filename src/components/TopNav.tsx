@@ -30,12 +30,18 @@ export const TopNav = ({ profile, unreadNotifications = 0 }: TopNavProps) => {
       </Link>
 
       <form method="get" action="/search" className="relative max-w-105 flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" strokeWidth={2} />
+        <button
+          type="submit"
+          aria-label="Search"
+          className="absolute left-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted transition hover:bg-muted-bg hover:text-text"
+        >
+          <Search className="h-4 w-4" strokeWidth={2} />
+        </button>
         <input
           type="search"
           name="q"
           placeholder="Search founders, startups, roles..."
-          className="h-10 w-full rounded-full border border-border/70 bg-muted-bg/70 pl-9 pr-3 text-[13.5px] text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
+          className="h-10 w-full rounded-full border border-border/70 bg-muted-bg/70 pl-10 pr-3 text-[13.5px] text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
         />
       </form>
 

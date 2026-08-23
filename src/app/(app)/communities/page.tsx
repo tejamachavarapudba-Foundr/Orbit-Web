@@ -10,7 +10,7 @@ export default async function CommunitiesPage() {
   const communities = await apiFetch<Community[]>("/communities/mine");
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass mb-5 flex items-center gap-3.5 rounded-2xl px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
           <Globe2 className="h-5 w-5" strokeWidth={2} />

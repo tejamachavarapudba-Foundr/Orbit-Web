@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { apiFetch } from "@/lib/api";
 import type { AuthMe, Conversation, Profile } from "@/lib/types";
@@ -22,7 +23,7 @@ const formatRelativeTime = (value: string) => {
 };
 
 export default async function MessagesPage() {
-  const me = await apiFetch<AuthMe>("/auth/me");
+  const me = await getMe();
   const conversations = await apiFetch<Conversation[]>("/chats");
 
   const others = await Promise.all(
@@ -38,7 +39,7 @@ export default async function MessagesPage() {
     .sort((a, b) => new Date(b.conversation.lastMessageAt).getTime() - new Date(a.conversation.lastMessageAt).getTime());
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass mb-5 flex items-center gap-3.5 rounded-2xl px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
           <MessageSquare className="h-5 w-5" strokeWidth={2} />

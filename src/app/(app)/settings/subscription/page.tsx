@@ -13,7 +13,7 @@ const features = [
 
 export default function SubscriptionPage() {
   return (
-    <div className="mx-auto max-w-140 px-5 py-5">
+    <div className="max-w-140">
       <FormHeader title="Subscription" description="Manage your plan" backHref="/settings" />
 
       <div className="glass rounded-2xl p-5">

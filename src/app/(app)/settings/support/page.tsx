@@ -5,7 +5,7 @@ import { FormHeader } from "@/components/FormHeader";
 
 export default function SupportPage() {
   return (
-    <div className="mx-auto max-w-140 px-5 py-5">
+    <div className="max-w-140">
       <FormHeader title="Support" description="Get help from our team" backHref="/settings" />
 
       <div className="glass flex flex-col items-center gap-3 rounded-2xl p-8 text-center">

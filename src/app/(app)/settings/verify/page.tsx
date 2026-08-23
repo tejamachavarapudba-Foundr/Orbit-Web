@@ -1,4 +1,5 @@
 import { CheckCircle2, Clock, ShieldCheck, ShieldX, Smartphone, XCircle } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { FormHeader } from "@/components/FormHeader";
 import { apiFetch } from "@/lib/api";
@@ -15,14 +16,14 @@ const statusChip = (status: "pending" | "approved" | "rejected") => {
 };
 
 export default async function VerifyProfilePage() {
-  const [me, status] = await Promise.all([apiFetch<AuthMe>("/auth/me"), apiFetch<VerificationStatus>("/verification/status")]);
+  const [me, status] = await Promise.all([getMe(), apiFetch<VerificationStatus>("/verification/status")]);
   const role = me.profile.role;
 
   const roleVerified =
     role === "investor" ? status.investorVerified : role === "professional" ? status.professionalVerified : role === "advisor" ? status.advisorVerified : role === "service_provider" ? status.serviceProviderVerified : null;
 
   return (
-    <div className="mx-auto max-w-140 px-5 py-5">
+    <div className="max-w-140">
       <FormHeader title="Verify profile" description="Identity and role verification" backHref="/settings" />
 
       <div className="glass mb-4 rounded-2xl p-4">

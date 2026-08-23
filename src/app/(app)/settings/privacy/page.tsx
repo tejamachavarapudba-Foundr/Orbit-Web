@@ -25,7 +25,7 @@ const sections = [
 
 export default function DataPrivacyPage() {
   return (
-    <div className="mx-auto max-w-140 px-5 py-5">
+    <div className="max-w-140">
       <FormHeader title="Data & Privacy" description="What we collect and why" backHref="/settings" />
 
       <div className="glass flex flex-col gap-5 rounded-2xl p-5">

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getMe } from "@/lib/auth";
 
 import { Sidebar } from "@/components/Sidebar";
 import { TopNav } from "@/components/TopNav";
@@ -59,7 +60,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // an uncaught server error.
   let me: AuthMe;
   try {
-    me = await apiFetch<AuthMe>("/auth/me");
+    me = await getMe();
   } catch (error) {
     if (error instanceof ApiError) {
       // Cookies can't be mutated during a Server Component render — just
@@ -84,8 +85,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-background">
       <TopNav profile={me.profile} unreadNotifications={unreadNotifications} />
-      <div className="mx-auto flex max-w-320 items-start gap-5">
-        <div className="sticky top-20 flex-shrink-0 py-5 pl-5">
+      <div className="mx-auto flex max-w-320 items-start gap-5 px-5 py-5">
+        <div className="sticky top-20 flex-shrink-0">
           <Sidebar
             profile={me.profile}
             isAdmin={me.role?.toUpperCase() === "ADMIN"}

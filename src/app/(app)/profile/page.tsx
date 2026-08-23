@@ -1,6 +1,7 @@
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
 import type { AuthMe } from "@/lib/types";
+import { getMe } from "@/lib/auth";
 
 import { AvatarUploadForm } from "./AvatarUploadForm";
 import { DeleteAccountButton } from "./DeleteAccountButton";
@@ -10,13 +11,13 @@ import { ResumeCard } from "./ResumeCard";
 export const dynamic = "force-dynamic";
 
 export default async function MyProfilePage() {
-  const me = await apiFetch<AuthMe>("/auth/me");
+  const me = await getMe();
   const { profile } = me;
   const initial = (profile.fullName || "?").charAt(0).toUpperCase();
   const completion = profile.profileCompletion ?? 0;
 
   return (
-    <div className="mx-auto max-w-140 px-5 py-5">
+    <div className="max-w-140">
       <div className="glass overflow-hidden rounded-2xl">
         <div className="h-16 bg-gradient-to-r from-primary via-indigo-400 to-purple-400" />
         <div className="px-5 pb-5">

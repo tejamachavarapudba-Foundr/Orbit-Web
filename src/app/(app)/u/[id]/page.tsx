@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Briefcase, ExternalLink, Globe, MapPin, MessageCircle, UserCheck, UserPlus, Users } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { PostCard } from "@/components/PostCard";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -30,7 +31,7 @@ export default async function UserProfilePage({ params }: ProfilePageProps) {
   }
 
   const [me, status, connectionCount, allPosts, savedPosts] = await Promise.all([
-    apiFetch<AuthMe>("/auth/me"),
+    getMe(),
     apiFetch<ConnectionStatus>(`/connections/status/${id}`),
     apiFetch<{ count: number }>(`/connections/count/${id}`),
     apiFetch<Post[]>("/posts"),
@@ -43,7 +44,7 @@ export default async function UserProfilePage({ params }: ProfilePageProps) {
   const myInitial = (me.profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass overflow-hidden rounded-2xl">
         <div className="h-24 bg-gradient-to-r from-primary/80 via-indigo-400/70 to-purple-400/70" />
         <div className="-mt-9 px-5 pb-5">

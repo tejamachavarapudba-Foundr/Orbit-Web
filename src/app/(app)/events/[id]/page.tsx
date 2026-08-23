@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Calendar, MapPin, Users } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, EventAttendee, EventItem } from "@/lib/types";
@@ -30,14 +31,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     throw error;
   }
 
-  const [me, attendees] = await Promise.all([apiFetch<AuthMe>("/auth/me"), apiFetch<EventAttendee[]>(`/events/${id}/attendees`)]);
+  const [me, attendees] = await Promise.all([getMe(), apiFetch<EventAttendee[]>(`/events/${id}/attendees`)]);
 
   const isGoing = attendees.some((a) => a.id === me.id);
   const isHost = event.hostId === me.id;
   const isCancelled = event.status === "CANCELLED";
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass rounded-2xl p-6">
         {isCancelled ? (
           <span className="mb-3 inline-block rounded-full bg-danger-bg px-3 py-1 text-xs font-bold text-danger">Cancelled</span>

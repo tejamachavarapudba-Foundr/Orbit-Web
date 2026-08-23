@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Briefcase, Building2, Layers } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, Job } from "@/lib/types";
@@ -23,12 +24,12 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     throw error;
   }
 
-  const me = await apiFetch<AuthMe>("/auth/me");
+  const me = await getMe();
   const isOwner = job.posterId === me.id;
   const hasApplied = job.applications?.some((a) => a.applicantId === me.id);
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass rounded-2xl p-6">
         <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
           <Briefcase className="h-6 w-6" strokeWidth={2} />

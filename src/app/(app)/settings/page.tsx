@@ -22,7 +22,7 @@ export default async function SettingsPage() {
   const current: ThemeChoice = stored === "light" || stored === "dark" ? stored : "system";
 
   return (
-    <div className="mx-auto max-w-140 px-5 py-5">
+    <div className="max-w-140">
       <FormHeader title="Settings" backHref="/" />
 
       <div className="glass mb-4 rounded-2xl p-4">

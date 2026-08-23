@@ -1,4 +1,5 @@
 import { Bookmark } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { PostCard } from "@/components/PostCard";
 import { apiFetch } from "@/lib/api";
@@ -7,11 +8,11 @@ import type { AuthMe, Post } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default async function SavedPage() {
-  const [me, posts] = await Promise.all([apiFetch<AuthMe>("/auth/me"), apiFetch<Post[]>("/posts/saved")]);
+  const [me, posts] = await Promise.all([getMe(), apiFetch<Post[]>("/posts/saved")]);
   const initial = (me.profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="glass mb-4 flex items-center gap-3.5 rounded-2xl px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
           <Bookmark className="h-5 w-5" strokeWidth={2} />

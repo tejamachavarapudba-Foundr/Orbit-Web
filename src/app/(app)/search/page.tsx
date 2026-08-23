@@ -23,7 +23,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : { users: [], projects: [], jobs: [], events: [], posts: [], messages: [] };
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <form method="get" className="glass mb-5 flex items-center gap-2.5 rounded-2xl px-4 py-3">
         <Search className="h-4 w-4 flex-shrink-0 text-muted" strokeWidth={2} />
         <input

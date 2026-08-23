@@ -4,6 +4,7 @@ import { StartupsHiring } from "@/components/StartupsHiring";
 import { TrendingStartups } from "@/components/TrendingStartups";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, ConnectedProfile, IncomingRequest, Job, OutgoingRequest, Post, Profile, TrendingStartup } from "@/lib/types";
+import { getMe } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ const loadPeopleYouMayKnow = async (myId: string): Promise<Profile[]> => {
 };
 
 export default async function HomePage() {
-  const me = await apiFetch<AuthMe>("/auth/me");
+  const me = await getMe();
   const [posts, trending, savedIds, hiringJobs, suggestedPeople] = await Promise.all([
     apiFetch<Post[]>("/posts"),
     loadTrending(),
@@ -73,8 +74,8 @@ export default async function HomePage() {
   const initial = (me.profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
-    <div className="mx-auto grid max-w-220 grid-cols-[minmax(0,1fr)_300px] items-start gap-5 px-5 py-5">
-      <main className="flex min-w-0 flex-col gap-4">
+    <div className="grid max-w-220 grid-cols-[minmax(0,1fr)_300px] items-start gap-5">
+      <div className="flex min-w-0 flex-col gap-4">
         {posts.length === 0 ? (
           <div className="glass rounded-2xl p-10 text-center">
             <p className="text-sm font-semibold text-text">No posts yet</p>
@@ -85,7 +86,7 @@ export default async function HomePage() {
             <PostCard key={post.id} post={post} currentUserId={me.id} currentUserInitial={initial} initialSaved={savedIds.has(post.id)} />
           ))
         )}
-      </main>
+      </div>
 
       <aside className="sticky top-20 flex flex-col gap-4">
         <TrendingStartups startups={trending} />

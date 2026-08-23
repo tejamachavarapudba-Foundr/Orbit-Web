@@ -57,6 +57,7 @@ export const PostCard = ({ post, currentUserId, currentUserInitial = "•", init
   const initial = (post.author.fullName || "?").charAt(0).toUpperCase();
 
   const [content, setContent] = useState(post.content);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [liked, setLiked] = useState(post.likes.some((like) => like.userId === currentUserId));
   const [likeCount, setLikeCount] = useState(post.likes.length);
   const [saved, setSaved] = useState(initialSaved);
@@ -273,7 +274,14 @@ export const PostCard = ({ post, currentUserId, currentUserInitial = "•", init
             </div>
           </div>
         ) : (
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text">{content}</p>
+          <div className="mt-3">
+            <p className={`whitespace-pre-wrap text-sm leading-relaxed text-text ${isExpanded ? "" : "line-clamp-2"}`}>{content}</p>
+            {!isExpanded && content.length > 140 ? (
+              <button type="button" onClick={() => setIsExpanded(true)} className="mt-0.5 text-xs font-bold text-muted hover:text-text">
+                ...more
+              </button>
+            ) : null}
+          </div>
         )}
 
         {post.linkUrl ? (

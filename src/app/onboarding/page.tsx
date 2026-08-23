@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getMe } from "@/lib/auth";
 
 import { apiFetch } from "@/lib/api";
 import { getSession } from "@/lib/session";
@@ -14,7 +15,7 @@ export default async function OnboardingPage() {
     redirect("/login");
   }
 
-  const me = await apiFetch<AuthMe>("/auth/me");
+  const me = await getMe();
   if (me.profile.onboardingCompleted) {
     redirect("/");
   }

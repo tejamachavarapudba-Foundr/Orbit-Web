@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, Rocket } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
@@ -30,13 +31,13 @@ const StartupCard = ({ startup }: { startup: ProjectRow }) => (
 );
 
 export default async function ProjectsPage() {
-  const [me, all] = await Promise.all([apiFetch<AuthMe>("/auth/me"), apiFetch<ProjectRow[]>("/projects")]);
+  const [me, all] = await Promise.all([getMe(), apiFetch<ProjectRow[]>("/projects")]);
 
   const mine = all.filter((p) => p.ownerId === me.id);
   const explore = all.filter((p) => p.ownerId !== me.id);
 
   return (
-    <div className="mx-auto max-w-220 px-5 py-5">
+    <div className="max-w-220">
       <div className="glass mb-5 flex items-center gap-3.5 rounded-2xl px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
           <Rocket className="h-5 w-5" strokeWidth={2} />

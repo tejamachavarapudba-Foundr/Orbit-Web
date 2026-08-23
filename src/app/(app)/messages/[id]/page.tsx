@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, Conversation, Profile } from "@/lib/types";
@@ -27,12 +28,12 @@ export default async function MessageThreadPage({ params }: MessageDetailPagePro
     throw error;
   }
 
-  const me = await apiFetch<AuthMe>("/auth/me");
+  const me = await getMe();
   const otherId = conversation.userAId === me.id ? conversation.userBId : conversation.userAId;
   const other = await apiFetch<Profile>(`/profiles/${otherId}`);
 
   return (
-    <div className="mx-auto max-w-160 px-5 py-5">
+    <div className="max-w-160">
       <div className="mb-3 flex items-center gap-3">
         <Link href="/messages" className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-muted hover:bg-muted-bg/70 hover:text-text">
           <ArrowLeft className="h-4.5 w-4.5" strokeWidth={2} />
