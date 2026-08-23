@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { Rss, Users } from "lucide-react";
 
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
-import type { AuthMe, ConnectedProfile, IncomingRequest, OutgoingRequest, Profile } from "@/lib/types";
+import type { AuthMe, ConnectedProfile, ConnectionProfile, IncomingRequest, OutgoingRequest, Profile } from "@/lib/types";
 
-import { acceptRequestAction, cancelRequestAction, connectAction, declineRequestAction } from "../u/[id]/actions";
+import { acceptRequestAction, cancelRequestAction, connectAction, declineRequestAction, followAction, unfollowAction } from "../u/[id]/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +25,7 @@ type NetworkPageProps = {
 const tabs = [
   { key: "requests", label: "Requests" },
   { key: "connections", label: "Connections" },
+  { key: "following", label: "Following" },
   { key: "discover", label: "Discover" }
 ] as const;
 
@@ -33,15 +34,17 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
   const tab = (params.tab as (typeof tabs)[number]["key"]) ?? "requests";
 
   const me = await apiFetch<AuthMe>("/auth/me");
-  const [incoming, outgoing, connections, allProfiles] = await Promise.all([
+  const [incoming, outgoing, connections, allProfiles, following] = await Promise.all([
     apiFetch<IncomingRequest[]>("/connections/requests/incoming"),
     apiFetch<OutgoingRequest[]>("/connections/requests/outgoing"),
     apiFetch<ConnectedProfile[]>(`/connections/${me.id}`),
-    apiFetch<Profile[]>("/profiles")
+    apiFetch<Profile[]>("/profiles"),
+    apiFetch<ConnectionProfile[]>(`/follows/following/${me.id}`)
   ]);
 
   const connectedIds = new Set(connections.map((c) => c.profile.id));
   const pendingIds = new Set([...incoming.map((r) => r.requester.id), ...outgoing.map((r) => r.recipient.id)]);
+  const followingIds = new Set(following.map((p) => p.id));
   const discoverable = allProfiles.filter((p) => p.id !== me.id && !connectedIds.has(p.id) && !pendingIds.has(p.id));
 
   return (
@@ -52,7 +55,9 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
         </span>
         <div>
           <h1 className="font-display text-lg font-bold text-text">My network</h1>
-          <p className="text-xs text-muted">{connections.length} connections</p>
+          <p className="text-xs text-muted">
+            {connections.length} connections · {following.length} following
+          </p>
         </div>
       </div>
 
@@ -156,6 +161,33 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
         </div>
       ) : null}
 
+      {tab === "following" ? (
+        <div className="glass rounded-2xl p-4">
+          {following.length === 0 ? (
+            <p className="p-4 text-center text-sm text-muted">You&apos;re not following anyone yet — follow people from Discover to see their public activity.</p>
+          ) : (
+            <div className="flex flex-col divide-y divide-border/60">
+              {following.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  <Link href={`/u/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                    <Avatar id={p.id} name={p.fullName} />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-bold text-text">{p.fullName || "Unnamed"}</div>
+                      <div className="truncate text-xs text-muted">{p.headline}</div>
+                    </div>
+                  </Link>
+                  <form action={unfollowAction.bind(null, p.id)}>
+                    <button type="submit" className="rounded-full border border-border/70 px-3.5 py-1.5 text-xs font-bold text-text hover:bg-muted-bg/70">
+                      Unfollow
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+
       {tab === "discover" ? (
         <div className="grid grid-cols-2 gap-3">
           {discoverable.length === 0 ? (
@@ -175,11 +207,24 @@ export default async function NetworkPage({ searchParams }: NetworkPageProps) {
                   </div>
                   <p className="mt-0.5 line-clamp-2 text-xs text-muted">{p.headline || p.role}</p>
                 </div>
-                <form action={connectAction.bind(null, p.id)} className="w-full">
-                  <button type="submit" className="mt-1 w-full rounded-full border border-primary/40 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary-muted">
-                    Connect
-                  </button>
-                </form>
+                <div className="mt-1 flex w-full gap-1.5">
+                  <form action={connectAction.bind(null, p.id)} className="flex-1">
+                    <button type="submit" className="w-full rounded-full border border-primary/40 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary-muted">
+                      Connect
+                    </button>
+                  </form>
+                  <form action={(followingIds.has(p.id) ? unfollowAction : followAction).bind(null, p.id)}>
+                    <button
+                      type="submit"
+                      title={followingIds.has(p.id) ? "Unfollow" : "Follow"}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
+                        followingIds.has(p.id) ? "border-primary/40 bg-primary-muted text-primary" : "border-border/70 text-muted hover:bg-muted-bg/70"
+                      }`}
+                    >
+                      <Rss className="h-3.5 w-3.5" strokeWidth={2} />
+                    </button>
+                  </form>
+                </div>
               </div>
             ))
           )}

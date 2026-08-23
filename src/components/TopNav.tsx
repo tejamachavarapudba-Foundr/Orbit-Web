@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Briefcase, Home, MessageSquare, Search, Users } from "lucide-react";
+import { Bell, Briefcase, Home, MessageSquare, Search, Users } from "lucide-react";
 
-import { logoutAction } from "@/app/(app)/actions";
 import type { Profile } from "@/lib/types";
 
 const tabs = [
@@ -13,9 +12,10 @@ const tabs = [
 
 type TopNavProps = {
   profile: Profile;
+  unreadNotifications?: number;
 };
 
-export const TopNav = ({ profile }: TopNavProps) => {
+export const TopNav = ({ profile, unreadNotifications = 0 }: TopNavProps) => {
   const initial = (profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
@@ -52,28 +52,24 @@ export const TopNav = ({ profile }: TopNavProps) => {
         ))}
       </nav>
 
-      <div className="group relative flex-shrink-0">
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-500 font-display text-xs font-bold text-white shadow-md shadow-rose-500/20"
-        >
-          {initial}
-        </button>
-        <div className="glass-strong invisible absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl py-2 opacity-0 transition group-hover:visible group-hover:opacity-100">
-          <div className="border-b border-border/60 px-4 pb-2.5">
-            <div className="truncate text-sm font-bold text-text">{profile.fullName || "Your account"}</div>
-            <div className="truncate text-xs text-muted">{profile.headline}</div>
-          </div>
-          <Link href={`/u/${profile.id}`} className="block px-4 py-2 text-sm font-semibold text-text hover:bg-muted-bg/70">
-            View profile
-          </Link>
-          <form action={logoutAction}>
-            <button type="submit" className="w-full px-4 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-bg/60">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </div>
+      <Link
+        href="/notifications"
+        aria-label="Notifications"
+        className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-muted-bg/70 hover:text-text"
+      >
+        <Bell className="h-5 w-5" strokeWidth={2} />
+        {unreadNotifications > 0 ? (
+          <span className="absolute right-1 top-1 flex h-2 w-2 rounded-full bg-danger" />
+        ) : null}
+      </Link>
+
+      <Link
+        href="/profile"
+        aria-label="Your profile"
+        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-500 font-display text-xs font-bold text-white shadow-md shadow-rose-500/20"
+      >
+        {initial}
+      </Link>
     </header>
   );
 };

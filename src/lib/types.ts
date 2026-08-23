@@ -16,6 +16,9 @@ export type Profile = {
   profileCompletion?: number;
   onboardingCompleted?: boolean;
   createdAt?: string;
+  resumeFileName?: string | null;
+  resumeFileSize?: number | null;
+  resumeUpdatedAt?: string | null;
 };
 
 export type AuthMe = {
@@ -184,6 +187,32 @@ export type Message = {
   content: string;
   createdAt: string;
   readAt: string | null;
+};
+
+export type VerificationStatus = {
+  identityVerified: boolean;
+  identityVerifiedAt: string | null;
+  founder: {
+    status: "pending" | "approved" | "rejected";
+    reviewNotes: string | null;
+    certificateName: string;
+    cinNumber: string | null;
+    documentUrl: string;
+    submittedAt: string;
+  } | null;
+  investorVerified: boolean;
+  professionalVerified: boolean;
+  advisorVerified: boolean;
+  serviceProviderVerified: boolean;
+};
+
+export type AppNotification = {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 };
 
 export type SearchResults = {

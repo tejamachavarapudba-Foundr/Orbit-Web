@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { Manrope, Sora } from "next/font/google";
 import "./globals.css";
@@ -19,9 +20,13 @@ export const metadata: Metadata = {
   description: "Where founders, investors and builders find each other."
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const store = await cookies();
+  const theme = store.get("orbit_theme")?.value;
+  const themeAttr = theme === "light" || theme === "dark" ? theme : undefined;
+
   return (
-    <html lang="en" className={`${manrope.variable} ${sora.variable} h-full antialiased`}>
+    <html lang="en" className={`${manrope.variable} ${sora.variable} h-full antialiased`} data-theme={themeAttr}>
       <body className="min-h-full">{children}</body>
     </html>
   );

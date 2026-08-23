@@ -1,9 +1,9 @@
-import { ProfileCard } from "@/components/ProfileCard";
-import { ShortcutsCard } from "@/components/ShortcutsCard";
 import { PostCard } from "@/components/PostCard";
+import { PeopleYouMayKnow } from "@/components/PeopleYouMayKnow";
+import { StartupsHiring } from "@/components/StartupsHiring";
 import { TrendingStartups } from "@/components/TrendingStartups";
 import { apiFetch, ApiError } from "@/lib/api";
-import type { AuthMe, Post, TrendingStartup } from "@/lib/types";
+import type { AuthMe, ConnectedProfile, IncomingRequest, Job, OutgoingRequest, Post, Profile, TrendingStartup } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -30,23 +30,50 @@ const loadSavedIds = async (): Promise<Set<string>> => {
   }
 };
 
+const loadHiringJobs = async (): Promise<Job[]> => {
+  try {
+    return await apiFetch<Job[]>("/jobs");
+  } catch (error) {
+    if (error instanceof ApiError) return [];
+    throw error;
+  }
+};
+
+const loadPeopleYouMayKnow = async (myId: string): Promise<Profile[]> => {
+  try {
+    const [profiles, incoming, outgoing, connections] = await Promise.all([
+      apiFetch<Profile[]>("/profiles"),
+      apiFetch<IncomingRequest[]>("/connections/requests/incoming"),
+      apiFetch<OutgoingRequest[]>("/connections/requests/outgoing"),
+      apiFetch<ConnectedProfile[]>(`/connections/${myId}`)
+    ]);
+    const excluded = new Set([
+      myId,
+      ...connections.map((c) => c.profile.id),
+      ...incoming.map((r) => r.requester.id),
+      ...outgoing.map((r) => r.recipient.id)
+    ]);
+    return profiles.filter((p) => !excluded.has(p.id));
+  } catch (error) {
+    if (error instanceof ApiError) return [];
+    throw error;
+  }
+};
+
 export default async function HomePage() {
-  const [me, posts, trending, savedIds] = await Promise.all([
-    apiFetch<AuthMe>("/auth/me"),
+  const me = await apiFetch<AuthMe>("/auth/me");
+  const [posts, trending, savedIds, hiringJobs, suggestedPeople] = await Promise.all([
     apiFetch<Post[]>("/posts"),
     loadTrending(),
-    loadSavedIds()
+    loadSavedIds(),
+    loadHiringJobs(),
+    loadPeopleYouMayKnow(me.id)
   ]);
 
   const initial = (me.profile.fullName || "?").charAt(0).toUpperCase();
 
   return (
-    <div className="mx-auto grid max-w-295 grid-cols-[240px_minmax(0,1fr)_300px] items-start gap-5 px-5 py-5">
-      <aside className="sticky top-20 flex flex-col gap-4">
-        <ProfileCard profile={me.profile} />
-        <ShortcutsCard initial={initial} />
-      </aside>
-
+    <div className="mx-auto grid max-w-220 grid-cols-[minmax(0,1fr)_300px] items-start gap-5 px-5 py-5">
       <main className="flex min-w-0 flex-col gap-4">
         {posts.length === 0 ? (
           <div className="glass rounded-2xl p-10 text-center">
@@ -62,6 +89,8 @@ export default async function HomePage() {
 
       <aside className="sticky top-20 flex flex-col gap-4">
         <TrendingStartups startups={trending} />
+        <StartupsHiring jobs={hiringJobs} />
+        <PeopleYouMayKnow people={suggestedPeople} />
       </aside>
     </div>
   );
