@@ -1,6 +1,5 @@
 import { ProfileCard } from "@/components/ProfileCard";
 import { ShortcutsCard } from "@/components/ShortcutsCard";
-import { PostComposer } from "@/components/PostComposer";
 import { PostCard } from "@/components/PostCard";
 import { TrendingStartups } from "@/components/TrendingStartups";
 import { apiFetch, ApiError } from "@/lib/api";
@@ -30,14 +29,12 @@ export default async function HomePage() {
     <div className="mx-auto grid max-w-295 grid-cols-[240px_minmax(0,1fr)_300px] items-start gap-5 px-5 py-5">
       <aside className="sticky top-20 flex flex-col gap-4">
         <ProfileCard profile={me.profile} />
-        <ShortcutsCard />
+        <ShortcutsCard initial={initial} />
       </aside>
 
       <main className="flex min-w-0 flex-col gap-4">
-        <PostComposer initial={initial} />
-
         {posts.length === 0 ? (
-          <div className="rounded-xl border border-border bg-surface p-10 text-center shadow-sm">
+          <div className="glass rounded-2xl p-10 text-center">
             <p className="text-sm font-semibold text-text">No posts yet</p>
             <p className="mt-1 text-sm text-muted">Be the first to share an update.</p>
           </div>

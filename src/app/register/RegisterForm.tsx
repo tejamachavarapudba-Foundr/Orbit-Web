@@ -19,7 +19,7 @@ export const RegisterForm = () => {
           name="fullName"
           required
           autoComplete="name"
-          className="h-11 rounded-lg border border-border bg-surface px-3 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-11 rounded-xl border border-border/70 bg-muted-bg/50 px-3.5 text-sm text-text outline-none focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/20"
           placeholder="Riya Sen"
         />
       </label>
@@ -31,7 +31,7 @@ export const RegisterForm = () => {
           name="email"
           required
           autoComplete="username"
-          className="h-11 rounded-lg border border-border bg-surface px-3 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-11 rounded-xl border border-border/70 bg-muted-bg/50 px-3.5 text-sm text-text outline-none focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/20"
           placeholder="you@example.com"
         />
       </label>
@@ -44,7 +44,7 @@ export const RegisterForm = () => {
           required
           minLength={8}
           autoComplete="new-password"
-          className="h-11 rounded-lg border border-border bg-surface px-3 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-11 rounded-xl border border-border/70 bg-muted-bg/50 px-3.5 text-sm text-text outline-none focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/20"
           placeholder="At least 8 characters"
         />
       </label>
@@ -58,7 +58,7 @@ export const RegisterForm = () => {
       <button
         type="submit"
         disabled={isPending}
-        className="mt-2 h-11 rounded-lg bg-primary text-sm font-bold text-on-primary transition hover:brightness-105 disabled:opacity-60"
+        className="mt-2 h-11 rounded-full bg-gradient-to-r from-primary to-indigo-500 text-sm font-bold text-on-primary shadow-md shadow-primary/25 transition hover:brightness-105 disabled:opacity-60"
       >
         {isPending ? "Creating account..." : "Create account"}
       </button>

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Heart, Link as LinkIcon, MessageCircle } from "lucide-react";
 
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { Post } from "@/lib/types";
 
 const gradients = [
@@ -32,7 +34,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const initial = (post.author.fullName || "?").charAt(0).toUpperCase();
 
   return (
-    <article className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+    <article className="glass rounded-2xl p-4">
       <div className="flex gap-2.5">
         <Link
           href={`/u/${post.author.id}`}
@@ -45,13 +47,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             <Link href={`/u/${post.author.id}`} className="truncate text-sm font-bold text-text hover:underline">
               {post.author.fullName || "Unknown"}
             </Link>
-            {post.author.identityVerified ? (
-              <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full bg-primary" title="Identity verified">
-                <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </span>
-            ) : null}
+            {post.author.identityVerified ? <VerifiedBadge /> : null}
           </div>
           <div className="text-[11.5px] text-muted">
             {post.author.headline ? `${post.author.headline} · ` : ""}
@@ -66,12 +62,14 @@ export const PostCard = ({ post }: PostCardProps) => {
       <p className="mt-3 max-w-140 whitespace-pre-wrap text-sm leading-relaxed text-text">{post.content}</p>
 
       {post.media?.[0] ? (
-        <div className="mt-3 overflow-hidden rounded-lg bg-muted-bg">
+        <div className="mt-3 flex max-h-125 items-center justify-center overflow-hidden rounded-xl bg-muted-bg/70">
           {post.media[0].type === "VIDEO" ? (
             <video src={post.media[0].url} controls className="max-h-125 w-full" />
           ) : (
+            // Full image, never cropped — letterboxed on a neutral background
+            // instead of object-cover, which was cutting content off.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.media[0].url} alt="" className="max-h-125 w-full object-cover" />
+            <img src={post.media[0].url} alt="" className="max-h-125 w-full object-contain" />
           )}
         </div>
       ) : null}
@@ -81,26 +79,20 @@ export const PostCard = ({ post }: PostCardProps) => {
           href={post.linkUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-muted-bg px-3 py-2.5 text-xs text-primary"
+          className="mt-3 flex items-center gap-2 rounded-xl border border-border/70 bg-muted-bg/60 px-3 py-2.5 text-xs text-primary"
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
-            <path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1" />
-          </svg>
+          <LinkIcon className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={2} />
           <span className="truncate">{post.linkUrl}</span>
         </a>
       ) : null}
 
-      <div className="mt-3.5 flex gap-1 border-t border-border pt-2.5">
-        <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted hover:bg-muted-bg hover:text-text">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" />
-          </svg>
+      <div className="mt-3.5 flex gap-1 border-t border-border/60 pt-2.5">
+        <button className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-muted-bg/70 hover:text-text">
+          <Heart className="h-3.5 w-3.5" strokeWidth={2} />
           {post.likes?.length ?? 0}
         </button>
-        <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted hover:bg-muted-bg hover:text-text">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
+        <button className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-muted-bg/70 hover:text-text">
+          <MessageCircle className="h-3.5 w-3.5" strokeWidth={2} />
           {post.comments?.length ?? 0}
         </button>
       </div>

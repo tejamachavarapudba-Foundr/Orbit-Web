@@ -5,9 +5,9 @@
   --color-on-primary: #ffffff;
   --color-primary-muted: #e8f0fe;
 
-  --color-background: #fcfcfd;
+  --color-background: #f4f7fb;
   --color-surface: #ffffff;
-  --color-text: #1e293b;
+  --color-text: #1a2233;
   --color-muted: #64748b;
   --color-muted-bg: #f1f5f9;
   --color-border: #e2e8f0;
@@ -16,6 +16,18 @@
   --color-success-bg: #dcfce7;
   --color-danger: #dc2626;
   --color-danger-bg: #fee2e2;
+
+  /* Glass surface tokens — translucent panel over the ambient gradient below,
+     with a real backdrop-blur so it actually reads as glass, not just a
+     semi-transparent flat color. */
+  --glass-bg: rgb(255 255 255 / 0.6);
+  --glass-bg-strong: rgb(255 255 255 / 0.78);
+  --glass-border: rgb(255 255 255 / 0.5);
+  --glass-shadow: 0 8px 32px rgb(30 41 59 / 0.08), 0 1px 2px rgb(30 41 59 / 0.04);
+
+  --ambient-a: #93c5fd;
+  --ambient-b: #c4b5fd;
+  --ambient-c: #a7f3d0;
 
   --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
@@ -27,7 +39,7 @@
     --color-on-primary: #0f172a;
     --color-primary-muted: #1e3a5f;
 
-    --color-background: #0f1217;
+    --color-background: #0c0e13;
     --color-surface: #191d23;
     --color-text: #f4f6f8;
     --color-muted: #a6b0bd;
@@ -38,6 +50,15 @@
     --color-success-bg: #142e21;
     --color-danger: #ff7d7d;
     --color-danger-bg: #3a1414;
+
+    --glass-bg: rgb(25 29 35 / 0.6);
+    --glass-bg-strong: rgb(25 29 35 / 0.82);
+    --glass-border: rgb(255 255 255 / 0.08);
+    --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
+
+    --ambient-a: #1d4ed8;
+    --ambient-b: #6d28d9;
+    --ambient-c: #047857;
   }
 }
 
@@ -65,12 +86,54 @@ body {
   font-family: var(--font-body);
   font-size: 14.5px;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Soft ambient color field the glass panels blur against. Fixed so it stays
+   put while the page scrolls, faint enough to stay out of the way of text. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.16;
+  background:
+    radial-gradient(38rem 26rem at 8% -8%, var(--ambient-a), transparent 60%),
+    radial-gradient(34rem 24rem at 100% 0%, var(--ambient-b), transparent 55%),
+    radial-gradient(30rem 22rem at 50% 100%, var(--ambient-c), transparent 55%);
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 ::selection {
   background: var(--color-primary-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

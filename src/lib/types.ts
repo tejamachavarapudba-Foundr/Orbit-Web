@@ -9,6 +9,7 @@ export type Profile = {
   avatarUrl: string;
   identityVerified?: boolean;
   profileCompletion?: number;
+  onboardingCompleted?: boolean;
 };
 
 export type AuthMe = {
