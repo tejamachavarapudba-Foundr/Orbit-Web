@@ -16,12 +16,17 @@ export const createMeetingProposalAction = async (_prevState: CreateMeetingState
 
   if (!purpose) return { error: "Choose a purpose for the meeting." };
 
+  // Captured client-side (this action runs on the server, whose own
+  // timezone has nothing to do with the user's) and passed through as a
+  // hidden field by NewMeetingForm.
+  const timezone = String(formData.get("timezone") ?? "").trim() || "UTC";
+
   const body: Record<string, unknown> = {
     inviteMode,
     purpose,
     message,
     schedulingMode,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    timezone
   };
 
   if (inviteMode === "startup") {
@@ -84,6 +89,14 @@ export const withdrawProposalAction = async (proposalId: string) => {
 export const cancelMeetingAction = async (meetingId: string) => {
   await apiFetch(`/meetings/${meetingId}/cancel`, { method: "POST", body: {} });
   revalidatePath("/meetings");
+};
+
+/** The meeting list never includes meetLink — this is the only endpoint
+ * that hands it back, and it records the click as a join before doing so. */
+export const joinMeetingAction = async (meetingId: string) => {
+  const { meetLink } = await apiFetch<{ meetLink: string }>(`/meetings/${meetingId}/join`, { method: "POST" });
+  revalidatePath("/meetings");
+  redirect(meetLink);
 };
 
 export const getGoogleConnectUrlAction = async (): Promise<string> => {

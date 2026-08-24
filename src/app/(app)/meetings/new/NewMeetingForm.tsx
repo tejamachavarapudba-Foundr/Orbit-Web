@@ -70,6 +70,7 @@ export const NewMeetingForm = ({ myProjects, people }: NewMeetingFormProps) => {
     <form action={formAction} className="glass flex flex-col gap-4 rounded-2xl p-6">
       <input type="hidden" name="inviteMode" value={inviteMode} />
       <input type="hidden" name="schedulingMode" value={schedulingMode} />
+      <input type="hidden" name="timezone" value={Intl.DateTimeFormat().resolvedOptions().timeZone} />
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-semibold text-text">Purpose</span>

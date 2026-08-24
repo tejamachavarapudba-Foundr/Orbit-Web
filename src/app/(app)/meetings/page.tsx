@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, Clock, Plus, Video, XCircle } from "lucide-react";
+import { CalendarClock, CheckCircle2, Clock, Plus, Video, XCircle } from "lucide-react";
 
 import { apiFetch, ApiError } from "@/lib/api";
 import { getMe } from "@/lib/auth";
@@ -7,6 +7,7 @@ import type { Meeting, MeetingProposal, MeetingsCancelled, MeetingsUpcoming } fr
 
 import { CancelMeetingButton } from "./CancelMeetingButton";
 import { GoogleConnectCard } from "./GoogleConnectCard";
+import { JoinMeetingButton } from "./JoinMeetingButton";
 import { RespondProposalForm } from "./RespondProposalForm";
 import { WithdrawButton } from "./WithdrawButton";
 
@@ -38,32 +39,56 @@ type MeetingsPageProps = {
 const otherParty = (proposal: MeetingProposal, myId: string) =>
   proposal.organizerId === myId ? proposal.invitees[0]?.user : proposal.organizer;
 
+// Snapshot at render time — this page is force-dynamic, so a reload gives a
+// fresh read. There's no participant-join tracking anywhere in the stack
+// (no Google Meet webhook, no presence data), so this can only say "we're
+// inside the scheduled window," not "someone is actually on the call."
+const isLiveNow = (meeting: Meeting) => {
+  if (meeting.status !== "upcoming") return false;
+  const start = new Date(meeting.confirmedAt).getTime();
+  const end = start + meeting.durationMins * 60_000;
+  const now = Date.now();
+  return now >= start && now < end;
+};
+
+const joinStatusText = (meeting: Meeting, myId: string, personName: string) => {
+  const iJoined = meeting.joins.some((j) => j.userId === myId);
+  const theyJoined = meeting.joins.some((j) => j.userId !== myId);
+  if (iJoined && theyJoined) return "You and " + personName + " both joined";
+  if (iJoined) return "You joined";
+  if (theyJoined) return `${personName} joined`;
+  return null;
+};
+
 const MeetingCard = ({ meeting, myId }: { meeting: Meeting; myId: string }) => {
   const person = otherParty(meeting.proposal, myId);
+  const live = isLiveNow(meeting);
+  const joinStatus = joinStatusText(meeting, myId, person?.fullName ?? "the other person");
+  const canCancel = meeting.status === "upcoming" && meeting.joins.length === 0;
+
   return (
     <div className="glass rounded-2xl p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-sm font-bold text-text">{meeting.proposal.purpose}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-text">{meeting.proposal.purpose}</h3>
+            {live ? (
+              <span className="flex flex-shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
+                Live now
+              </span>
+            ) : null}
+          </div>
           <p className="mt-0.5 text-xs text-muted">with {person?.fullName ?? "Unknown"}</p>
           <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
             <Clock className="h-3.5 w-3.5" strokeWidth={2} />
-            {formatDateTime(meeting.confirmedAt)}
+            {formatDateTime(meeting.confirmedAt)} · {meeting.durationMins}min
           </p>
+          {joinStatus ? <p className="mt-1 text-xs font-semibold text-success">{joinStatus}</p> : null}
         </div>
-        {meeting.status === "upcoming" ? <CancelMeetingButton meetingId={meeting.id} /> : null}
+        {canCancel ? <CancelMeetingButton meetingId={meeting.id} /> : null}
       </div>
-      {meeting.meetLink ? (
-        <a
-          href={meeting.meetLink}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-indigo-500 px-3.5 py-1.5 text-xs font-bold text-on-primary"
-        >
-          <Video className="h-3.5 w-3.5" strokeWidth={2} />
-          Join call
-        </a>
-      ) : null}
+      {meeting.status === "upcoming" ? <JoinMeetingButton meetingId={meeting.id} /> : null}
     </div>
   );
 };
@@ -85,10 +110,20 @@ export default async function MeetingsPage({ searchParams }: MeetingsPageProps) 
           <p className="text-xs text-muted">Requests, confirmed calls and past meetings</p>
         </div>
         {isGoogleConnected ? (
-          <Link href="/meetings/new" className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-2 text-xs font-bold text-on-primary shadow-md shadow-primary/25">
-            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-            New meeting
-          </Link>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <Link
+              href="/meetings/availability"
+              aria-label="Set your availability"
+              title="Set your availability"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 text-muted transition hover:bg-muted-bg/70 hover:text-text"
+            >
+              <CalendarClock className="h-4 w-4" strokeWidth={2} />
+            </Link>
+            <Link href="/meetings/new" className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-2 text-xs font-bold text-on-primary shadow-md shadow-primary/25">
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              New meeting
+            </Link>
+          </div>
         ) : null}
       </div>
 

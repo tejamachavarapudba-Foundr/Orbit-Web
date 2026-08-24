@@ -225,6 +225,8 @@ export type MeetingProposal = {
   invitees: ProposalInviteeRow[];
 };
 
+export type MeetingJoinRecord = { id: string; meetingId: string; userId: string; joinedAt: string };
+
 export type Meeting = {
   id: string;
   proposalId: string;
@@ -234,10 +236,21 @@ export type Meeting = {
   meetLink: string | null;
   status: "upcoming" | "completed" | "cancelled";
   proposal: MeetingProposal;
+  joins: MeetingJoinRecord[];
 };
 
 export type MeetingsUpcoming = { meetings: Meeting[]; pendingProposals: MeetingProposal[] };
 export type MeetingsCancelled = { meetings: Meeting[]; proposals: MeetingProposal[] };
+
+export type AvailabilitySlot = {
+  id: string;
+  profileId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  isActive: boolean;
+};
 
 export type VerificationStatus = {
   identityVerified: boolean;
