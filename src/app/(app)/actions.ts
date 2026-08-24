@@ -53,6 +53,19 @@ export const deletePostAction = async (postId: string): Promise<void> => {
   await apiFetch(`/posts/${postId}`, { method: "DELETE" });
 };
 
+export const reportPostAction = async (postId: string, reason: string): Promise<void> => {
+  await apiFetch(`/posts/${postId}/report`, { method: "POST", body: { reason } });
+};
+
+export const notInterestedAction = async (postId: string): Promise<void> => {
+  await apiFetch(`/posts/${postId}/not-interested`, { method: "POST" });
+};
+
+export const getFollowStatusAction = async (targetId: string): Promise<boolean> => {
+  const { isFollowing } = await apiFetch<{ isFollowing: boolean }>(`/follows/status/${targetId}`);
+  return isFollowing;
+};
+
 export const listCommentsAction = async (postId: string): Promise<PostComment[]> =>
   apiFetch(`/comments?postId=${postId}`);
 

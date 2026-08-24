@@ -3,18 +3,23 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bookmark, Heart, Link as LinkIcon, MessageCircle, MoreHorizontal, Pencil, Send, Trash2, X } from "lucide-react";
+import { Bookmark, EyeOff, Flag, Heart, Link as LinkIcon, MessageCircle, MoreHorizontal, Pencil, Send, Share2, Trash2, UserMinus, UserPlus, X } from "lucide-react";
 
 import {
   createCommentAction,
   deleteCommentAction,
   deletePostAction,
+  getFollowStatusAction,
   listCommentsAction,
+  notInterestedAction,
+  reportPostAction,
   toggleLikeAction,
   toggleSaveAction,
   updatePostAction
 } from "@/app/(app)/actions";
+import { followAction, unfollowAction } from "@/app/(app)/u/[id]/actions";
 import { Avatar } from "@/components/Avatar";
+import { PostMediaCarousel } from "@/components/PostMediaCarousel";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { Post, PostComment } from "@/lib/types";
 
@@ -28,11 +33,6 @@ const formatRelativeTime = (value: string) => {
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(value));
-};
-
-const gridCellClass = (index: number, total: number) => {
-  if (total === 3 && index === 0) return "row-span-2";
-  return "";
 };
 
 type PostCardProps = {
@@ -62,9 +62,13 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
   const [commentCount, setCommentCount] = useState(post.comments.length);
   const [commentDraft, setCommentDraft] = useState("");
 
+  const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+  const [notInterested, setNotInterested] = useState(false);
+  const [reported, setReported] = useState(false);
+
   const [, startTransition] = useTransition();
 
-  if (deleted) return null;
+  if (deleted || notInterested) return null;
 
   const handleLike = () => {
     const next = !liked;
@@ -103,6 +107,74 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
         router.refresh();
       } catch {
         window.alert("Couldn't delete that post — try again.");
+      }
+    });
+  };
+
+  const openMenu = () => {
+    setMenuOpen(true);
+    if (!isOwn && isFollowing === null) {
+      startTransition(async () => {
+        try {
+          setIsFollowing(await getFollowStatusAction(post.author.id));
+        } catch {
+          setIsFollowing(false);
+        }
+      });
+    }
+  };
+
+  const handleShare = () => {
+    setMenuOpen(false);
+    const url = `${window.location.origin}/p/${post.id}`;
+    if (navigator.share) {
+      navigator.share({ url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(
+        () => window.alert("Link copied to clipboard."),
+        () => window.alert(url)
+      );
+    }
+  };
+
+  const handleToggleFollow = () => {
+    const next = !isFollowing;
+    setMenuOpen(false);
+    setIsFollowing(next);
+    startTransition(async () => {
+      try {
+        await (next ? followAction : unfollowAction)(post.author.id);
+      } catch {
+        setIsFollowing(!next);
+        window.alert(`Couldn't ${next ? "follow" : "unfollow"} — try again.`);
+      }
+    });
+  };
+
+  const handleNotInterested = () => {
+    setMenuOpen(false);
+    setNotInterested(true);
+    startTransition(async () => {
+      try {
+        await notInterestedAction(post.id);
+      } catch {
+        setNotInterested(false);
+        window.alert("Couldn't hide that post — try again.");
+      }
+    });
+  };
+
+  const handleReport = () => {
+    setMenuOpen(false);
+    if (reported) return;
+    const reason = window.prompt("What's wrong with this post? (optional)") ?? "";
+    startTransition(async () => {
+      try {
+        await reportPostAction(post.id, reason.trim());
+        setReported(true);
+        window.alert("Thanks — we'll take a look.");
+      } catch {
+        window.alert("Couldn't report that post — try again.");
       }
     });
   };
@@ -191,24 +263,21 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
           <div className="relative flex-shrink-0" onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setMenuOpen(false)}>
             <button
               type="button"
-              onClick={() => setMenuOpen((open) => !open)}
+              onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
               aria-label="Post options"
               className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-muted-bg/70 hover:text-text"
             >
               <MoreHorizontal className="h-4.5 w-4.5" strokeWidth={2} />
             </button>
             {menuOpen ? (
-              <div className="glass-strong absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl py-1.5">
+              <div className="glass-strong absolute right-0 top-full z-20 mt-1 w-48 overflow-hidden rounded-xl py-1.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    handleSave();
-                  }}
+                  onClick={handleShare}
                   className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70"
                 >
-                  <Bookmark className="h-3.5 w-3.5" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
-                  {saved ? "Unsave" : "Save post"}
+                  <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
+                  Share
                 </button>
                 {isOwn ? (
                   <>
@@ -229,7 +298,35 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
                       Delete post
                     </button>
                   </>
-                ) : null}
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleToggleFollow}
+                      disabled={isFollowing === null}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70 disabled:opacity-50"
+                    >
+                      {isFollowing ? <UserMinus className="h-3.5 w-3.5" strokeWidth={2} /> : <UserPlus className="h-3.5 w-3.5" strokeWidth={2} />}
+                      {isFollowing === null ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNotInterested}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70"
+                    >
+                      <EyeOff className="h-3.5 w-3.5" strokeWidth={2} />
+                      Not interested
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReport}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-danger hover:bg-danger-bg/60"
+                    >
+                      <Flag className="h-3.5 w-3.5" strokeWidth={2} />
+                      {reported ? "Reported" : "Report post"}
+                    </button>
+                  </>
+                )}
               </div>
             ) : null}
           </div>
@@ -287,34 +384,7 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
         <div className="h-3" />
       </div>
 
-      {post.media.length === 1 ? (
-        <div className="flex max-h-125 items-center justify-center overflow-hidden bg-muted-bg/70">
-          {post.media[0].type === "VIDEO" ? (
-            <video src={post.media[0].url} controls className="max-h-125 w-full" />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.media[0].url} alt="" className="max-h-125 w-full object-contain" />
-          )}
-        </div>
-      ) : post.media.length > 1 ? (
-        <div className={`grid h-96 gap-0.5 bg-border/60 ${post.media.length === 2 ? "grid-cols-2" : "grid-cols-2 grid-rows-2"}`}>
-          {post.media.slice(0, 4).map((item, index) => (
-            <div key={item.id} className={`relative overflow-hidden bg-muted-bg/70 ${gridCellClass(index, Math.min(post.media.length, 4))}`}>
-              {item.type === "VIDEO" ? (
-                <video src={item.url} className="h-full w-full object-cover" muted />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.url} alt="" className="h-full w-full object-cover" />
-              )}
-              {index === 3 && post.media.length > 4 ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/55 font-display text-lg font-bold text-white">
-                  +{post.media.length - 4}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      ) : null}
+      <PostMediaCarousel media={post.media} />
 
       <div className="flex gap-1 border-t border-border/60 px-2 py-1">
         <button
