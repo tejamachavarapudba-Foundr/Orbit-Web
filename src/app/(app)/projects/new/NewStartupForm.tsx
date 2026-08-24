@@ -7,6 +7,9 @@ import { createProjectAction, type CreateProjectState } from "../actions";
 
 const initialState: CreateProjectState = { error: null };
 
+// Kept in sync with Orbit-FE's PROJECT_PLATFORM_OPTIONS (mobile's "Platform"
+// field doubles as this same category) — same values on both platforms so a
+// project's category displays and edits correctly on either client.
 const projectTypes = [
   "saas",
   "marketplace",
@@ -27,9 +30,11 @@ const projectTypes = [
   "creator_economy",
   "agency",
   "nonprofit",
+  "mobility",
   "other"
 ];
 
+// Kept in sync with Orbit-FE's projectStageOptions — same values on both platforms.
 const stages = ["idea", "prototype", "mvp", "beta", "launched", "growth", "scaling", "profitable", "acquired"];
 
 const inputClass =
