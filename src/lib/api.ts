@@ -16,18 +16,40 @@ const refreshAccessToken = async (): Promise<string | null> => {
   const refreshToken = await getRefreshToken();
   if (!refreshToken) return null;
 
-  const res = await fetch(`${BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-    cache: "no-store"
-  });
+  try {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      cache: "no-store"
+    });
 
-  if (!res.ok) return null;
+    if (!res.ok) return null;
 
-  const data = (await res.json()) as { accessToken: string; refreshToken: string };
-  await setSessionTokens(data.accessToken, data.refreshToken);
-  return data.accessToken;
+    const data = (await res.json()) as { accessToken: string; refreshToken: string };
+
+    // Persisting the refreshed cookie only works when this call originated
+    // from a Server Action or Route Handler — Next.js throws if cookies()
+    // is written during a plain Server Component render (a page's own data
+    // fetch), which apiFetch also runs from. That uncaught throw is exactly
+    // what surfaced as "This page couldn't load — A server error occurred"
+    // instead of the page just... loading. When we can't persist it, use
+    // the fresh token for this one request only; the next mutating action
+    // (or the next page load once this token also expires) will refresh —
+    // and that time actually persist — again.
+    try {
+      await setSessionTokens(data.accessToken, data.refreshToken);
+    } catch {
+      // not in a context that can set cookies — see above, expected.
+    }
+
+    return data.accessToken;
+  } catch {
+    // Network failure or a non-JSON response from a flaky backend — treat
+    // it the same as "couldn't refresh" (redirect to login) instead of
+    // letting the exception crash the render.
+    return null;
+  }
 };
 
 type ApiFetchOptions = {
