@@ -29,8 +29,16 @@ const tabs = [
   { key: "cancelled", label: "Cancelled" }
 ] as const;
 
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
+// This is a Server Component — it renders on the server, whose own runtime
+// timezone (UTC on Railway) has nothing to do with the viewer's. Without an
+// explicit timeZone, Intl.DateTimeFormat falls back to that server zone,
+// which can shift a correctly-stored instant onto the wrong calendar day
+// (e.g. 3am IST rendering as ~9:30pm UTC the day before). Each meeting
+// already carries the zone it was booked in, so use that instead.
+const formatDateTime = (value: string, timeZone: string) =>
+  new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone }).format(
+    new Date(value)
+  );
 
 type MeetingsPageProps = {
   searchParams: Promise<{ tab?: string; status?: string }>;
@@ -82,7 +90,7 @@ const MeetingCard = ({ meeting, myId }: { meeting: Meeting; myId: string }) => {
           <p className="mt-0.5 text-xs text-muted">with {person?.fullName ?? "Unknown"}</p>
           <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
             <Clock className="h-3.5 w-3.5" strokeWidth={2} />
-            {formatDateTime(meeting.confirmedAt)} · {meeting.durationMins}min
+            {formatDateTime(meeting.confirmedAt, meeting.timezone)} · {meeting.durationMins}min
           </p>
           {joinStatus ? <p className="mt-1 text-xs font-semibold text-success">{joinStatus}</p> : null}
         </div>
