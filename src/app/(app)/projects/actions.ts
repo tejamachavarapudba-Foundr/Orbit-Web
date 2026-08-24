@@ -22,6 +22,11 @@ export const createProjectAction = async (_prevState: CreateProjectState, formDa
       body: {
         name,
         projectType,
+        // Mobile treats "category" as the same concept as projectType and
+        // keeps them in sync when creating a project (see ProjectComposer's
+        // "Category was folded into Platform" comment) — matching that here
+        // so a project's category isn't silently blank when made on web.
+        category: projectType,
         stage,
         tagline: String(formData.get("tagline") ?? "").trim(),
         description: String(formData.get("description") ?? "").trim(),
