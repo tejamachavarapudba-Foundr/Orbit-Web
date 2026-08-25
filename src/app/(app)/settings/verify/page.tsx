@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import type { AuthMe, VerificationStatus } from "@/lib/types";
 
 import { FounderVerificationForm } from "./FounderVerificationForm";
+import { RoleVerificationForm } from "./RoleVerificationForm";
 
 export const dynamic = "force-dynamic";
 
@@ -81,17 +82,25 @@ export default async function VerifyProfilePage() {
             <FounderVerificationForm />
           )}
         </div>
-      ) : roleVerified !== null ? (
-        <div className="glass flex items-center gap-3 rounded-2xl p-4">
-          <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${roleVerified ? "bg-success-bg text-success" : "bg-muted-bg text-muted"}`}>
-            {roleVerified ? <CheckCircle2 className="h-4.5 w-4.5" strokeWidth={2} /> : <ShieldX className="h-4.5 w-4.5" strokeWidth={2} />}
-          </span>
-          <div className="min-w-0">
-            <div className="text-sm font-bold capitalize text-text">{role.replace(/_/g, " ")} verification</div>
-            <div className="text-xs text-muted">
-              {roleVerified ? "Your profile meets our verification criteria." : "Complete your profile details to appear verified."}
-            </div>
+      ) : role === "investor" || role === "professional" || role === "advisor" || role === "service_provider" ? (
+        <div className="glass rounded-2xl p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold capitalize text-text">{role.replace(/_/g, " ")} verification</h2>
+            <span
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${roleVerified ? "bg-success-bg text-success" : "bg-muted-bg text-muted"}`}
+            >
+              {roleVerified ? <CheckCircle2 className="h-3 w-3" strokeWidth={2} /> : <ShieldX className="h-3 w-3" strokeWidth={2} />}
+              {roleVerified ? "Verified" : "Incomplete"}
+            </span>
           </div>
+          <p className="mb-3 text-xs text-muted">
+            {role === "investor"
+              ? "Add your company name and website — this unlocks investor snapshots on startups."
+              : role === "service_provider"
+                ? "Add your company name, website and LinkedIn page."
+                : "Add your work experience and any certifications — this boosts how your profile appears to others. Certifications are optional."}
+          </p>
+          <RoleVerificationForm role={role} profile={me.profile} />
         </div>
       ) : null}
     </div>

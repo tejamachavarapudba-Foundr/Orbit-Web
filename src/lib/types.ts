@@ -1,3 +1,60 @@
+export type WorkExperience = {
+  company: string;
+  designation: string;
+  location: string;
+  startDate: string; // "YYYY-MM"
+  endDate: string; // "YYYY-MM", blank when isCurrent
+  isCurrent: boolean;
+  /** Free-text timeline from before the date-picker existed — display fallback only. */
+  legacyTimeline?: string;
+};
+
+export type Certification = {
+  name: string;
+  fileUrl: string;
+  fileKey: string;
+};
+
+export type InvestorProfileData = {
+  fundName: string;
+  investmentRange: string;
+  industries: string[];
+  portfolio: string;
+  geography: string;
+  goals: string[];
+};
+
+export type ProfessionalProfileData = {
+  skills: string[];
+  experienceLevel: string;
+  portfolio: string;
+  resume: string;
+  certifications: Certification[];
+  experiences: WorkExperience[];
+  goals: string[];
+  specialization: string;
+  specializationOther: string;
+};
+
+export type AdvisorProfileData = {
+  expertise: string[];
+  yearsExperience: string;
+  industries: string[];
+  mentorshipAreas: string[];
+  certifications: Certification[];
+  experiences: WorkExperience[];
+  goals: string[];
+};
+
+export type ServiceProviderProfileData = {
+  company: string;
+  services: string[];
+  website: string;
+  companyLinkedinUrl: string;
+  clientIndustries: string[];
+  goals: string[];
+};
+
 export type Profile = {
   id: string;
   fullName: string;
@@ -19,6 +76,10 @@ export type Profile = {
   resumeFileName?: string | null;
   resumeFileSize?: number | null;
   resumeUpdatedAt?: string | null;
+  investorProfile?: InvestorProfileData | null;
+  professionalProfile?: ProfessionalProfileData | null;
+  advisorProfile?: AdvisorProfileData | null;
+  serviceProviderProfile?: ServiceProviderProfileData | null;
 };
 
 export type AuthMe = {
