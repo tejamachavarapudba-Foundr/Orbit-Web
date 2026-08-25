@@ -330,6 +330,16 @@ export type VerificationStatus = {
   serviceProviderVerified: boolean;
 };
 
+/** Same booleans as VerificationStatus, safe to show on anyone's profile — no founder submission details. */
+export type PublicVerificationStatus = {
+  identityVerified: boolean;
+  founderVerified: boolean;
+  investorVerified: boolean;
+  professionalVerified: boolean;
+  advisorVerified: boolean;
+  serviceProviderVerified: boolean;
+};
+
 export type AppNotification = {
   id: string;
   type: string;

@@ -5,9 +5,10 @@ import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
 import { PostCard } from "@/components/PostCard";
+import { RoleDetailsSection } from "@/components/RoleDetailsSection";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch, ApiError } from "@/lib/api";
-import type { AuthMe, ConnectionStatus, Post, Profile } from "@/lib/types";
+import type { AuthMe, ConnectionStatus, Post, Profile, PublicVerificationStatus } from "@/lib/types";
 
 import { acceptRequestAction, cancelRequestAction, connectAction, declineRequestAction, messageAction } from "./actions";
 
@@ -28,12 +29,13 @@ export default async function UserProfilePage({ params }: ProfilePageProps) {
     throw error;
   }
 
-  const [me, status, connectionCount, allPosts, savedPosts] = await Promise.all([
+  const [me, status, connectionCount, allPosts, savedPosts, verification] = await Promise.all([
     getMe(),
     apiFetch<ConnectionStatus>(`/connections/status/${id}`),
     apiFetch<{ count: number }>(`/connections/count/${id}`),
     apiFetch<Post[]>("/posts"),
-    apiFetch<Post[]>("/posts/saved").catch(() => [] as Post[])
+    apiFetch<Post[]>("/posts/saved").catch(() => [] as Post[]),
+    apiFetch<PublicVerificationStatus>(`/verification/status/${id}`).catch(() => null)
   ]);
 
   const posts = allPosts.filter((post) => post.author.id === id);
@@ -154,6 +156,8 @@ export default async function UserProfilePage({ params }: ProfilePageProps) {
           ) : null}
         </div>
       </div>
+
+      <RoleDetailsSection profile={profile} verification={verification} />
 
       <div className="mt-5 flex flex-col gap-4">
         <h2 className="px-1 font-display text-sm font-bold text-text">Posts</h2>

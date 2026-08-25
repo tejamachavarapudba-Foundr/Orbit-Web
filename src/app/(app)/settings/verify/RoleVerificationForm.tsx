@@ -69,13 +69,30 @@ const ExperienceEditor = ({
   };
   const removeEntry = (index: number) => onChange(experiences.filter((_, i) => i !== index));
 
+  // Only one experience can be "current" at a time — checking it here
+  // unchecks it everywhere else, and moves this entry to the front, which
+  // is what the "Current / most recent" label on index 0 already assumes.
+  const toggleCurrent = (index: number) => {
+    const target = experiences[index];
+    if (!target) return;
+
+    if (target.isCurrent) {
+      updateEntry(index, { isCurrent: false });
+      return;
+    }
+
+    const current: WorkExperience = { ...target, isCurrent: true, endDate: "" };
+    const rest = experiences.filter((_, i) => i !== index).map((entry) => ({ ...entry, isCurrent: false }));
+    onChange([current, ...rest]);
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <span className="text-sm font-semibold text-text">Work experience</span>
       {experiences.map((entry, index) => (
         <div key={index} className="flex flex-col gap-3 rounded-xl border border-border/70 p-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted">{index === 0 ? "Current / most recent" : `Experience ${index + 1}`}</span>
+            <span className="text-xs text-muted">{entry.isCurrent ? "Current" : index === 0 ? "Most recent" : `Experience ${index + 1}`}</span>
             <button type="button" onClick={() => removeEntry(index)} aria-label="Remove" className="text-muted hover:text-danger">
               <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
@@ -97,16 +114,11 @@ const ExperienceEditor = ({
             <span className={labelClass}>Location</span>
             <input value={entry.location} onChange={(e) => updateEntry(index, { location: e.target.value })} className={inputClass} />
           </label>
-          <MonthYearSelect label="Start date" value={entry.startDate} onChange={(v) => updateEntry(index, { startDate: v })} />
           <label className="flex items-center gap-2 text-sm text-text">
-            <input
-              type="checkbox"
-              checked={entry.isCurrent}
-              onChange={(e) => updateEntry(index, { isCurrent: e.target.checked, endDate: "" })}
-              className="h-4 w-4 accent-primary"
-            />
+            <input type="checkbox" checked={entry.isCurrent} onChange={() => toggleCurrent(index)} className="h-4 w-4 accent-primary" />
             I currently work here
           </label>
+          <MonthYearSelect label="Start date" value={entry.startDate} onChange={(v) => updateEntry(index, { startDate: v })} />
           {!entry.isCurrent ? (
             <MonthYearSelect label="End date" value={entry.endDate} onChange={(v) => updateEntry(index, { endDate: v })} />
           ) : null}
@@ -221,10 +233,15 @@ export const RoleVerificationForm = ({ role, profile }: RoleVerificationFormProp
   );
   const [certifications, setCertifications] = useState<Certification[]>(roleData?.certifications ?? []);
 
+  // Onboarding's Quick Profile step already collects company/website/LinkedIn
+  // for service providers (mapped to the shared profile fields) — falling
+  // back to those here means this form isn't asking the user to re-enter
+  // the same details a second time from blank, which looked like "onboarding
+  // details aren't carrying over" even though they were saved correctly.
   const spData = profile.serviceProviderProfile;
-  const [spCompany, setSpCompany] = useState(spData?.company ?? "");
-  const [spWebsite, setSpWebsite] = useState(spData?.website ?? "");
-  const [spLinkedin, setSpLinkedin] = useState(spData?.companyLinkedinUrl ?? "");
+  const [spCompany, setSpCompany] = useState(spData?.company || profile.company || "");
+  const [spWebsite, setSpWebsite] = useState(spData?.website || profile.website || "");
+  const [spLinkedin, setSpLinkedin] = useState(spData?.companyLinkedinUrl || profile.linkedinUrl || "");
 
   const submit = () => {
     setError(null);
