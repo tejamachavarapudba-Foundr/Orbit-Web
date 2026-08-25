@@ -1,14 +1,18 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { apiFetch, ApiError } from "@/lib/api";
 import { setSessionTokens } from "@/lib/session";
 
 const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:3000/api";
 
-export type ActionResult = { error: string | null };
+export type RegisterState = { error: string | null };
 
-export const registerAction = async (payload: { fullName: string; email: string; password: string }): Promise<ActionResult> => {
-  const { fullName, email, password } = payload;
+export const registerAction = async (_prevState: RegisterState, formData: FormData): Promise<RegisterState> => {
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
 
   if (!fullName || !email || !password) {
     return { error: "Fill in your name, email and password." };
@@ -37,11 +41,17 @@ export const registerAction = async (payload: { fullName: string; email: string;
   }
 
   const data = (await res.json()) as { accessToken: string; refreshToken: string };
-  // Session cookies are set here (not redirected yet) so the phone-verification
-  // step that follows can call the now-authenticated /auth/phone/* endpoints.
   await setSessionTokens(data.accessToken, data.refreshToken);
-  return { error: null };
+  // A plain redirect() here (not client-side navigation) is what actually
+  // works: Server Actions trigger an implicit revalidation of the current
+  // route after they run, and register/page.tsx's own "redirect away if
+  // already authenticated" gate would otherwise fire the instant these
+  // cookies land, yanking the user back to / before any client-side step
+  // state (e.g. "now show the phone step") ever gets a chance to matter.
+  redirect("/register/verify-phone");
 };
+
+export type ActionResult = { error: string | null };
 
 /** Phone verification is a soft gate (same philosophy as email verification
  * elsewhere in this app) — the account already exists and is usable either
