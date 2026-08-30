@@ -21,7 +21,7 @@ const projectTypes: { label: string; value: string }[] = [
   { label: "FinTech", value: "fintech" },
   { label: "HealthTech", value: "healthtech" },
   { label: "EdTech", value: "edtech" },
-  { label: "ClimateTech", value: "climate" },
+  { label: "Climate Tech", value: "climate" },
   { label: "DeepTech", value: "deeptech" },
   { label: "Web3", value: "web3" },
   { label: "E-commerce", value: "ecommerce" },
