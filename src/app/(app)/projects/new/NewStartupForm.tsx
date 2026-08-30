@@ -9,29 +9,24 @@ const initialState: CreateProjectState = { error: null };
 
 // Kept in sync with Orbit-FE's PROJECT_PLATFORM_OPTIONS (mobile's "Platform"
 // field doubles as this same category) — same values on both platforms so a
-// project's category displays and edits correctly on either client.
-const projectTypes = [
-  "saas",
-  "marketplace",
-  "consumer_app",
-  "mobile_app",
-  "hardware",
-  "ai_ml",
-  "fintech",
-  "healthtech",
-  "edtech",
-  "climate",
-  "deeptech",
-  "web3",
-  "ecommerce",
-  "social",
-  "developer_tools",
-  "enterprise",
-  "creator_economy",
-  "agency",
-  "nonprofit",
-  "mobility",
-  "other"
+// project's category displays and edits correctly on either client. Labels
+// differ from the raw value for a couple of entries (e.g. "Consumer & D2C"
+// for "consumer_app") — the value itself never changes so existing projects
+// aren't orphaned by a rename.
+const projectTypes: { label: string; value: string }[] = [
+  { label: "SaaS", value: "saas" },
+  { label: "Marketplace", value: "marketplace" },
+  { label: "Consumer & D2C", value: "consumer_app" },
+  { label: "AI / ML", value: "ai_ml" },
+  { label: "FinTech", value: "fintech" },
+  { label: "HealthTech", value: "healthtech" },
+  { label: "EdTech", value: "edtech" },
+  { label: "ClimateTech", value: "climate" },
+  { label: "DeepTech", value: "deeptech" },
+  { label: "Web3", value: "web3" },
+  { label: "E-commerce", value: "ecommerce" },
+  { label: "Mobility", value: "mobility" },
+  { label: "Other", value: "other" }
 ];
 
 // Kept in sync with Orbit-FE's projectStageOptions — same values on both platforms.
@@ -86,8 +81,8 @@ export const NewStartupForm = () => {
               Select category
             </option>
             {projectTypes.map((t) => (
-              <option key={t} value={t}>
-                {t.replace(/_/g, " ")}
+              <option key={t.value} value={t.value}>
+                {t.label}
               </option>
             ))}
           </select>
