@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { apiFetch, ApiError } from "@/lib/api";
-import { setSessionTokens } from "@/lib/session";
+import { getSession, setSessionTokens } from "@/lib/session";
+import { PASSWORD_REQUIREMENTS_MESSAGE, isStrongPassword } from "@/lib/validation";
 
 const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:3000/api";
 
@@ -17,8 +18,8 @@ export const registerAction = async (_prevState: RegisterState, formData: FormDa
   if (!fullName || !email || !password) {
     return { error: "Fill in your name, email and password." };
   }
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
+  if (!isStrongPassword(password)) {
+    return { error: PASSWORD_REQUIREMENTS_MESSAGE };
   }
 
   const res = await fetch(`${BASE_URL}/auth/register`, {
@@ -48,15 +49,48 @@ export const registerAction = async (_prevState: RegisterState, formData: FormDa
   // already authenticated" gate would otherwise fire the instant these
   // cookies land, yanking the user back to / before any client-side step
   // state (e.g. "now show the phone step") ever gets a chance to matter.
-  redirect("/register/verify-phone");
+  // Email verification is mandatory (see (app)/layout.tsx's hard gate) and
+  // register() on the backend already emailed the code, so that's the first
+  // stop; the soft, skippable phone step comes after.
+  redirect("/register/verify-email");
 };
 
 export type ActionResult = { error: string | null };
 
-/** Phone verification is a soft gate (same philosophy as email verification
- * elsewhere in this app) — the account already exists and is usable either
- * way, so a "not configured yet" response from a not-yet-set-up Twilio
- * integration surfaces as a normal error here rather than blocking signup. */
+/** Email verification is a hard gate — (app)/layout.tsx redirects any
+ * signed-in account with emailVerified=false back to /register/verify-email
+ * on every request, with no skip. Both endpoints are @Public() on the
+ * backend (no auth header required) and identify the account by email, so
+ * the email comes from the session's decoded JWT rather than a form field —
+ * nothing for the client to tamper with or need to re-enter. */
+export const sendEmailOtpAction = async (): Promise<ActionResult> => {
+  const session = await getSession();
+  if (!session) return { error: "You're not signed in." };
+
+  try {
+    await apiFetch("/auth/resend-verification", { method: "POST", body: { email: session.email } });
+    return { error: null };
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Couldn't send that code — try again." };
+  }
+};
+
+export const verifyEmailOtpAction = async (code: string): Promise<ActionResult> => {
+  const session = await getSession();
+  if (!session) return { error: "You're not signed in." };
+
+  try {
+    await apiFetch("/auth/verify-email-otp", { method: "POST", body: { email: session.email, code } });
+    return { error: null };
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "That code is incorrect — try again." };
+  }
+};
+
+/** Phone verification is a soft gate — the account already exists and is
+ * usable either way, so a "not configured yet" response from a not-yet-set-up
+ * Twilio integration surfaces as a normal error here rather than blocking
+ * signup. Email verification above is the hard gate. */
 export const sendPhoneOtpAction = async (phoneNumber: string): Promise<ActionResult> => {
   try {
     await apiFetch("/auth/phone/send-otp", { method: "POST", body: { phoneNumber } });

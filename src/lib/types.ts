@@ -86,6 +86,7 @@ export type AuthMe = {
   id: string;
   email: string;
   role: string;
+  emailVerified: boolean;
   profile: Profile;
 };
 

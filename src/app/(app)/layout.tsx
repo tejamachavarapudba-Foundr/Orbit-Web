@@ -87,6 +87,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     throw error;
   }
 
+  // Hard gate, no skip — every request from an unverified account lands
+  // back here, mirroring the mobile app's RootNavigator. Checked before the
+  // onboarding redirect so a fresh signup verifies email first.
+  if (!me.emailVerified) {
+    redirect("/register/verify-email");
+  }
+
   if (!me.profile.onboardingCompleted) {
     redirect("/onboarding");
   }

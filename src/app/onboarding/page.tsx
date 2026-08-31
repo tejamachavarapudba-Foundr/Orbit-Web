@@ -16,6 +16,12 @@ export default async function OnboardingPage() {
   }
 
   const me = await getMe();
+  // Same hard gate as (app)/layout.tsx — onboarding sits outside that route
+  // group's layout, so it needs its own check rather than inheriting one.
+  if (!me.emailVerified) {
+    redirect("/register/verify-email");
+  }
+
   if (me.profile.onboardingCompleted) {
     redirect("/");
   }
