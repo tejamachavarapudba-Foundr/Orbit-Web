@@ -1,4 +1,4 @@
-import { PostCard } from "@/components/PostCard";
+import { FeedPostList } from "./FeedPostList";
 import { PeopleYouMayKnow } from "@/components/PeopleYouMayKnow";
 import { StartupsHiring } from "@/components/StartupsHiring";
 import { TrendingStartups } from "@/components/TrendingStartups";
@@ -61,10 +61,12 @@ const loadPeopleYouMayKnow = async (myId: string): Promise<Profile[]> => {
   }
 };
 
+const FEED_PAGE_SIZE = 10;
+
 export default async function HomePage() {
   const me = await getMe();
   const [posts, trending, savedIds, hiringJobs, suggestedPeople] = await Promise.all([
-    apiFetch<Post[]>("/posts"),
+    apiFetch<Post[]>(`/posts?page=1&limit=${FEED_PAGE_SIZE}`),
     loadTrending(),
     loadSavedIds(),
     loadHiringJobs(),
@@ -73,24 +75,15 @@ export default async function HomePage() {
 
   return (
     <div className="grid max-w-220 grid-cols-[minmax(0,1fr)_300px] items-start gap-5">
-      <div className="flex min-w-0 flex-col gap-4">
-        {posts.length === 0 ? (
-          <div className="glass rounded-2xl p-10 text-center">
-            <p className="text-sm font-semibold text-text">No posts yet</p>
-            <p className="mt-1 text-sm text-muted">Be the first to share an update.</p>
-          </div>
-        ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentUserId={me.id}
-              currentUserName={me.profile.fullName}
-              currentUserAvatarUrl={me.profile.avatarUrl}
-              initialSaved={savedIds.has(post.id)}
-            />
-          ))
-        )}
+      <div className="min-w-0">
+        <FeedPostList
+          initialPosts={posts}
+          initialHasMore={posts.length === FEED_PAGE_SIZE}
+          currentUserId={me.id}
+          currentUserName={me.profile.fullName}
+          currentUserAvatarUrl={me.profile.avatarUrl}
+          initialSavedIds={Array.from(savedIds)}
+        />
       </div>
 
       <aside className="sticky top-20 flex flex-col gap-4">

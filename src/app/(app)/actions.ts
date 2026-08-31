@@ -40,6 +40,15 @@ export const createPostAction = async (
   return { error: null };
 };
 
+const FEED_PAGE_SIZE = 10;
+
+/** Matches the mobile app's page size — the backend defaults /posts to
+ * limit=50 with no pagination UI in mind for web, but real "load more"
+ * paging (not just revealing more of one big fetch) is what actually gets
+ * web to the same behavior as mobile as the platform grows. */
+export const loadMorePostsAction = async (page: number): Promise<Post[]> =>
+  apiFetch<Post[]>(`/posts?page=${page}&limit=${FEED_PAGE_SIZE}`);
+
 export const toggleLikeAction = async (postId: string): Promise<{ liked: boolean }> =>
   apiFetch(`/likes/${postId}`, { method: "POST" });
 
