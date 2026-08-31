@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bookmark, Briefcase, Globe, MapPin, Star, Users } from "lucide-react";
+import { Bookmark, Briefcase, ChevronRight, Globe, MapPin, Star, TrendingUp, Users } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
@@ -139,6 +139,30 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
             <span className="font-bold text-text">{startup.equityPercent ? `${startup.equityPercent}%` : "—"}</span>
           </div>
         </div>
+      ) : null}
+
+      {isOwner || (me.profile.role === "investor" && startup.investorSnapshot?.isCompleted) ? (
+        <Link
+          href={`/startups/${id}/investor-snapshot`}
+          className="glass mt-4 flex items-center justify-between rounded-2xl p-4 hover:bg-muted-bg/40"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-muted text-primary">
+              <TrendingUp className="h-4.5 w-4.5" strokeWidth={2} />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-text">Investor snapshot</p>
+              <p className="text-xs text-muted">
+                {isOwner
+                  ? startup.investorSnapshot?.isCompleted
+                    ? "Published — view or edit"
+                    : `${startup.investorSnapshot?.completionPercentage ?? 0}% complete — finish and publish`
+                  : "View financials, traction and fundraising details"}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted" strokeWidth={2} />
+        </Link>
       ) : null}
 
       {startup.members && startup.members.length > 0 ? (

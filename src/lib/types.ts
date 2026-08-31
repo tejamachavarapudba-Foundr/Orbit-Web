@@ -124,6 +124,60 @@ export type PostComment = {
   author: PostAuthor;
 };
 
+// Field set matches exactly what Orbit-FE's 4 wired investor-snapshot
+// screens (BusinessSummary/Traction/Financial/Ownership) actually edit —
+// the backend model has more fields (year1-3Revenue, topRisks, founder
+// social links, document uploads) but those live on screens mobile never
+// wired into its navigator, so this intentionally excludes them too.
+export type InvestorSnapshot = {
+  id?: string;
+  projectId?: string;
+
+  targetCustomers: string;
+  businessModel: string;
+  revenueStreams: string;
+  marketOpportunity: string;
+  startupVision: string;
+  problemStatement: string;
+  solutionSummary: string;
+
+  totalUsers: number | null;
+  activeUsers: number | null;
+  payingCustomers: number | null;
+  enterpriseCustomers: number | null;
+  customerGrowthRate: number | null;
+  revenueGrowthRate: number | null;
+  keyPartnerships: string;
+  majorAchievements: string;
+
+  mrr: number | null;
+  arr: number | null;
+  cashBalance: number | null;
+  burnRate: number | null;
+  runwayMonths: number | null;
+  grossMargin: number | null;
+  cac: number | null;
+  ltv: number | null;
+  ltvCacRatio: number | null;
+  churnRate: number | null;
+  ebitda: number | null;
+  ebitdaPercent: number | null;
+
+  currentRound: string;
+  amountRaising: number | null;
+  minimumCheckSize: number | null;
+  maximumCheckSize: number | null;
+  equityOffered: number | null;
+  founderOwnership: number | null;
+  employeeEsop: number | null;
+  investorOwnership: number | null;
+  availablePool: number | null;
+
+  completionPercentage: number;
+  isCompleted: boolean;
+  isInvestorReady: boolean;
+};
+
 export type ProjectComment = {
   id: string;
   content: string;
@@ -159,6 +213,7 @@ export type StartupDetail = TrendingStartup & {
   equityPercent?: string;
   fundingStage?: string;
   foundedYear?: number | null;
+  investorSnapshot?: { isCompleted: boolean; completionPercentage: number } | null;
   createdAt: string;
   owner: { id: string; fullName: string; headline: string; avatarUrl: string } | null;
   members: { id: string; role: string; user: { id: string; fullName: string; avatarUrl: string; headline: string } }[];
