@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Bookmark, Calendar, Compass, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Star, Users, Video } from "lucide-react";
+import { Bell, Bookmark, Calendar, Compass, Film, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Star, Users, Video } from "lucide-react";
 
 import { logoutAction } from "@/app/(app)/actions";
 import { Avatar } from "@/components/Avatar";
@@ -13,6 +13,7 @@ import type { Profile } from "@/lib/types";
 
 const menuItems = [
   { href: "/discover", match: "/discover", label: "Discover", Icon: Compass, color: "from-violet-400 to-purple-500" },
+  { href: "/pitch-videos", match: "/pitch-videos", label: "Pitch videos", Icon: Film, color: "from-fuchsia-400 to-pink-500" },
   { href: "/network?tab=connections", match: "/network", label: "My network", Icon: Users, color: "from-sky-400 to-blue-500", badgeKey: "pending" as const },
   { href: "/meetings", match: "/meetings", label: "My meetings", Icon: Video, color: "from-cyan-400 to-sky-500" },
   { href: "/watchlist", match: "/watchlist", label: "Investment Watchlist", Icon: Star, color: "from-yellow-400 to-amber-500", investorOnly: true as const },

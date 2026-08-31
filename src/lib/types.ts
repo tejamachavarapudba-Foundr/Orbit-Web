@@ -178,6 +178,25 @@ export type InvestorSnapshot = {
   isInvestorReady: boolean;
 };
 
+export type PitchReel = {
+  id: string;
+  name: string;
+  tagline: string;
+  logoUrl: string;
+  pitchVideoUrl: string;
+  ownerId: string;
+  createdAt: string;
+  likeCount: number;
+  commentCount: number;
+  isLikedByMe: boolean;
+  isSavedByMe: boolean;
+};
+
+export type PitchReelsPage = {
+  items: PitchReel[];
+  nextCursor: string | null;
+};
+
 export type ProjectComment = {
   id: string;
   content: string;
