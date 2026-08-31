@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { apiFetch } from "@/lib/api";
+import type { ProjectComment } from "@/lib/types";
 
 export const saveStartupAction = async (id: string) => {
   await apiFetch(`/projects/${id}/save`, { method: "POST" });
@@ -44,4 +45,14 @@ export const submitReviewAction = async (id: string, _prevState: ReviewState, fo
 
   revalidatePath(`/startups/${id}`);
   return { error: null, success: "Review submitted." };
+};
+
+export const listProjectCommentsAction = async (projectId: string): Promise<ProjectComment[]> =>
+  apiFetch(`/projects/${projectId}/comments`);
+
+export const createProjectCommentAction = async (projectId: string, content: string): Promise<ProjectComment> =>
+  apiFetch(`/projects/${projectId}/comments`, { method: "POST", body: { content } });
+
+export const deleteProjectCommentAction = async (commentId: string): Promise<void> => {
+  await apiFetch(`/project-comments/${commentId}`, { method: "DELETE" });
 };

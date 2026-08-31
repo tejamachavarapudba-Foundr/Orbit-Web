@@ -10,6 +10,7 @@ import type { AuthMe, StartupDetail } from "@/lib/types";
 
 import { ApplyForm } from "./ApplyForm";
 import { ReviewForm } from "./ReviewForm";
+import { StartupComments } from "./StartupComments";
 import { saveStartupAction, unsaveStartupAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -190,6 +191,13 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
           </div>
         ) : null}
       </div>
+
+      <StartupComments
+        startupId={id}
+        currentUserId={me.id}
+        currentUserName={me.profile.fullName}
+        currentUserAvatarUrl={me.profile.avatarUrl}
+      />
     </div>
   );
 }

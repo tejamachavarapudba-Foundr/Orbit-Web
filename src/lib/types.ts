@@ -124,6 +124,13 @@ export type PostComment = {
   author: PostAuthor;
 };
 
+export type ProjectComment = {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: PostAuthor;
+};
+
 export type TrendingStartup = {
   id: string;
   name: string;
