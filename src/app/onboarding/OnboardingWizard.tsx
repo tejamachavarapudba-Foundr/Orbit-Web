@@ -73,7 +73,14 @@ export const OnboardingWizard = ({ fullName }: OnboardingWizardProps) => {
     const roleData: Record<string, unknown> = {};
     for (const field of roleFieldConfig[role]) {
       const value = roleFields[field.key] ?? "";
-      roleData[field.key] = field.key === "expertise" || field.key === "skills" || field.key === "services" ? splitCsv(value) : value;
+      // Must match the Prisma column type each role's data actually writes
+      // to (FounderProfile.industry, AdvisorProfile.expertise,
+      // ProfessionalProfile.skills, ServiceProviderProfile.services are all
+      // String[]) — sending a raw string for any of these throws a Prisma
+      // validation error server-side, which onboarding/actions.ts then
+      // surfaces as a generic "Something went wrong."
+      const arrayFields = ["industry", "expertise", "skills", "services"];
+      roleData[field.key] = arrayFields.includes(field.key) ? splitCsv(value) : value;
     }
     roleData.goals = goals;
 
