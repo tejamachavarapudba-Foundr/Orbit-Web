@@ -115,6 +115,27 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
         </div>
       </div>
 
+      {startup.pitchVideoUrl ? (
+        <div className="glass mt-4 rounded-2xl p-4">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Founder pitch</h2>
+          <video controls className="w-full rounded-xl bg-black" src={startup.pitchVideoUrl} />
+        </div>
+      ) : null}
+
+      {startup.askAmount || startup.equityPercent ? (
+        <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+          <h2 className="text-center text-xs font-bold uppercase tracking-wide text-primary">Founder&apos;s offer</h2>
+          <div className="mt-2.5 flex items-center justify-between text-sm">
+            <span className="text-muted">Ask</span>
+            <span className="font-bold text-text">{startup.askAmount || "—"}</span>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-sm">
+            <span className="text-muted">Equity %</span>
+            <span className="font-bold text-text">{startup.equityPercent ? `${startup.equityPercent}%` : "—"}</span>
+          </div>
+        </div>
+      ) : null}
+
       {startup.members && startup.members.length > 0 ? (
         <div className="glass mt-4 rounded-2xl p-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Team</h2>

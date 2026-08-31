@@ -120,10 +120,32 @@ export const NewStartupForm = () => {
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-semibold text-text">Pitch video URL</span>
-        <input name="pitchVideoUrl" placeholder="https://youtube.com/..." className={inputClass} />
-        <span className="text-xs text-muted">Keep it to 30–45 seconds — that&apos;s the sweet spot for investors to quickly find your potential.</span>
+        <span className="text-sm font-semibold text-text">
+          Founder pitch video <span className="text-danger">*</span>
+        </span>
+        <input
+          type="file"
+          name="pitchVideoFile"
+          required
+          accept="video/mp4,video/quicktime,video/webm"
+          className={`${inputClass} file:mr-3 file:rounded-full file:border-0 file:bg-primary-muted file:px-3.5 file:py-1.5 file:text-xs file:font-bold file:text-primary`}
+        />
+        <span className="text-xs text-muted">
+          Upload a video file (mp4/mov/webm) — a link to another site can&apos;t be played in-app, so a direct upload is
+          required. Keep it to 30–45 seconds, the sweet spot for investors to quickly find your potential.
+        </span>
       </label>
+
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-primary/25 bg-primary/5 p-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold text-text">Founder&apos;s offer — ask</span>
+          <input name="askAmount" placeholder="e.g. ₹50 Lakh" className={inputClass} />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold text-text">Equity %</span>
+          <input name="equityPercent" placeholder="e.g. 5" className={inputClass} />
+        </label>
+      </div>
 
       {state.error ? <p className="text-sm font-medium text-danger">{state.error}</p> : null}
 
@@ -132,7 +154,7 @@ export const NewStartupForm = () => {
         disabled={isPending}
         className="mt-1 self-start rounded-full bg-gradient-to-r from-primary to-indigo-500 px-5 py-2.5 text-sm font-bold text-on-primary shadow-md shadow-primary/25 disabled:opacity-60"
       >
-        {isPending ? "Creating..." : "Create startup"}
+        {isPending ? "Creating & uploading video..." : "Create startup"}
       </button>
       </form>
     </>

@@ -147,6 +147,9 @@ export type StartupDetail = TrendingStartup & {
   industryTags?: string[];
   techStack?: string[];
   lookingFor?: string[];
+  pitchVideoUrl?: string;
+  askAmount?: string;
+  equityPercent?: string;
   createdAt: string;
   owner: { id: string; fullName: string; headline: string; avatarUrl: string } | null;
   members: { id: string; role: string; user: { id: string; fullName: string; avatarUrl: string; headline: string } }[];
