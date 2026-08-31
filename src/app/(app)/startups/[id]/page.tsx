@@ -78,12 +78,16 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
             <span className="rounded-full bg-muted-bg px-2 py-0.5 font-bold capitalize">{startup.stage}</span>
             <span className="rounded-full bg-muted-bg px-2 py-0.5 font-bold capitalize">{startup.projectType?.replace(/_/g, " ")}</span>
+            {startup.fundingStage ? (
+              <span className="rounded-full bg-muted-bg px-2 py-0.5 font-bold capitalize">{startup.fundingStage.replace(/_/g, " ")}</span>
+            ) : null}
             {startup.location ? (
               <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" strokeWidth={2} />
                 {startup.location}
               </span>
             ) : null}
+            {startup.foundedYear ? <span>Founded {startup.foundedYear}</span> : null}
             {avgRating > 0 ? (
               <span className="flex items-center gap-1 font-semibold text-amber-500">
                 <Star className="h-3 w-3" strokeWidth={2} fill="currentColor" />
@@ -101,8 +105,8 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
                 {startup.owner.fullName}
               </Link>
             ) : null}
-            {startup.website ? (
-              <a href={startup.website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-semibold text-primary">
+            {startup.websiteUrl ? (
+              <a href={startup.websiteUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-semibold text-primary">
                 <Globe className="h-3.5 w-3.5" strokeWidth={2} />
                 Website
               </a>

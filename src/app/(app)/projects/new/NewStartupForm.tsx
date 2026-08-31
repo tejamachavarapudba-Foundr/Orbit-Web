@@ -32,6 +32,18 @@ const projectTypes: { label: string; value: string }[] = [
 // Kept in sync with Orbit-FE's projectStageOptions — same values on both platforms.
 const stages = ["idea", "prototype", "mvp", "beta", "launched", "growth", "scaling", "profitable", "acquired"];
 
+// Kept in sync with Orbit-FE's FUNDING_STAGE_OPTIONS — same values on both platforms.
+const fundingStages: { label: string; value: string }[] = [
+  { label: "Idea Stage", value: "idea_stage" },
+  { label: "Bootstrapping", value: "bootstrapping" },
+  { label: "Pre-Seed Stage", value: "pre_seed_stage" },
+  { label: "Seed Stage", value: "seed_stage" },
+  { label: "Series A", value: "series_a" },
+  { label: "Series B", value: "series_b" },
+  { label: "Series C", value: "series_c" },
+  { label: "Series D", value: "series_d" }
+];
+
 const inputClass =
   "w-full rounded-xl border border-border/70 bg-muted-bg/60 px-3.5 py-2.5 text-sm text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15";
 
@@ -108,16 +120,46 @@ export const NewStartupForm = () => {
         <textarea name="description" rows={4} placeholder="What are you building, and why does it matter?" className={`${inputClass} resize-none`} />
       </label>
 
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold text-text">Funding stage</span>
+        <select name="fundingStage" defaultValue="" className={inputClass}>
+          <option value="" disabled>
+            Select funding stage
+          </option>
+          {fundingStages.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <div className="grid grid-cols-2 gap-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold text-text">Founded year</span>
+          <input name="foundedYear" type="number" placeholder="2024" className={inputClass} />
+        </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-semibold text-text">Location</span>
           <input name="location" placeholder="City, Country" className={inputClass} />
         </label>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-text">Website</span>
-          <input name="websiteUrl" placeholder="https://" className={inputClass} />
+          <span className="text-sm font-semibold text-text">CIN number</span>
+          <input name="cinNumber" placeholder="U72900KA2020PTC..." className={`${inputClass} uppercase`} />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold text-text">DPIIT number</span>
+          <input name="dpiitNumber" placeholder="DIPP..." className={`${inputClass} uppercase`} />
         </label>
       </div>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold text-text">Website</span>
+        <input name="websiteUrl" placeholder="https://" className={inputClass} />
+      </label>
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-semibold text-text">
@@ -146,6 +188,18 @@ export const NewStartupForm = () => {
           <input name="equityPercent" placeholder="e.g. 5" className={inputClass} />
         </label>
       </div>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold text-text">Tech stack</span>
+        <input name="techStack" placeholder="react, node, postgres" className={inputClass} />
+        <span className="text-xs text-muted">Comma-separated.</span>
+      </label>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold text-text">Looking for</span>
+        <input name="lookingFor" placeholder="engineer, designer" className={inputClass} />
+        <span className="text-xs text-muted">Comma-separated.</span>
+      </label>
 
       {state.error ? <p className="text-sm font-medium text-danger">{state.error}</p> : null}
 

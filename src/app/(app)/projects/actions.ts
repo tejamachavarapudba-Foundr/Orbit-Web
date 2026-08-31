@@ -6,6 +6,13 @@ import { apiFetch } from "@/lib/api";
 
 export type CreateProjectState = { error: string | null };
 
+// Matches Orbit-FE's csvToArray in modules/project/hooks.ts.
+const csvToArray = (value: string) =>
+  value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 export const createProjectAction = async (_prevState: CreateProjectState, formData: FormData): Promise<CreateProjectState> => {
   const name = String(formData.get("name") ?? "").trim();
   const projectType = String(formData.get("projectType") ?? "");
@@ -42,6 +49,12 @@ export const createProjectAction = async (_prevState: CreateProjectState, formDa
         websiteUrl: String(formData.get("websiteUrl") ?? "").trim(),
         askAmount: String(formData.get("askAmount") ?? "").trim(),
         equityPercent: String(formData.get("equityPercent") ?? "").trim(),
+        fundingStage: String(formData.get("fundingStage") ?? "").trim(),
+        foundedYear: formData.get("foundedYear") ? Number(formData.get("foundedYear")) : null,
+        cinNumber: String(formData.get("cinNumber") ?? "").trim(),
+        dpiitNumber: String(formData.get("dpiitNumber") ?? "").trim(),
+        techStack: csvToArray(String(formData.get("techStack") ?? "")),
+        lookingFor: csvToArray(String(formData.get("lookingFor") ?? "")),
         isPublished: true
       }
     });

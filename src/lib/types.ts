@@ -142,7 +142,7 @@ export type SavedStartup = {
 
 export type StartupDetail = TrendingStartup & {
   description?: string;
-  website?: string;
+  websiteUrl?: string;
   location?: string;
   industryTags?: string[];
   techStack?: string[];
@@ -150,6 +150,8 @@ export type StartupDetail = TrendingStartup & {
   pitchVideoUrl?: string;
   askAmount?: string;
   equityPercent?: string;
+  fundingStage?: string;
+  foundedYear?: number | null;
   createdAt: string;
   owner: { id: string; fullName: string; headline: string; avatarUrl: string } | null;
   members: { id: string; role: string; user: { id: string; fullName: string; avatarUrl: string; headline: string } }[];
