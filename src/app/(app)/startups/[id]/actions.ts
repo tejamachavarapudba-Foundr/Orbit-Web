@@ -15,6 +15,9 @@ export const unsaveStartupAction = async (id: string) => {
   revalidatePath(`/startups/${id}`);
 };
 
+export const toggleStartupLikeAction = async (id: string): Promise<{ liked: boolean }> =>
+  apiFetch(`/projects/${id}/like`, { method: "POST" });
+
 export type ApplyState = { error: string | null; success: string | null };
 
 export const applyToStartupAction = async (id: string, _prevState: ApplyState, formData: FormData): Promise<ApplyState> => {

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 
+import { TimeSelect } from "@/components/TimeSelect";
 import { saveAvailabilityAction, type SaveAvailabilityState } from "./actions";
 import type { AvailabilitySlot } from "@/lib/types";
 
@@ -52,9 +53,9 @@ export const AvailabilityForm = ({ existing }: AvailabilityFormProps) => {
             </label>
             {isOn ? (
               <div className="flex flex-shrink-0 items-center gap-2">
-                <input type="time" name={`start_${day}`} defaultValue={slot?.startTime ?? "09:00"} className={inputClass} />
+                <TimeSelect name={`start_${day}`} defaultValue={slot?.startTime ?? "09:00"} className={inputClass} />
                 <span className="text-xs text-muted">to</span>
-                <input type="time" name={`end_${day}`} defaultValue={slot?.endTime ?? "17:00"} className={inputClass} />
+                <TimeSelect name={`end_${day}`} defaultValue={slot?.endTime ?? "17:00"} className={inputClass} />
               </div>
             ) : null}
           </div>

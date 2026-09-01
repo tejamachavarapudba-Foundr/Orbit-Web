@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Bookmark, ChevronDown, ChevronUp, MessageCircle, Send, ThumbsUp, Volume2, VolumeX, X } from "lucide-react";
+import { Bookmark, MessageCircle, Send, ThumbsUp, X } from "lucide-react";
 
 import { Avatar } from "@/components/Avatar";
 import {
@@ -13,6 +13,8 @@ import {
 import type { PitchReel, ProjectComment } from "@/lib/types";
 
 import { loadReelsAction, saveReelAction, toggleReelLikeAction, unsaveReelAction } from "./actions";
+
+const REEL_PAGE_SIZE = 10;
 
 const formatRelativeTime = (value: string) => {
   const diffMs = Date.now() - new Date(value).getTime();
@@ -26,112 +28,238 @@ const formatRelativeTime = (value: string) => {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(value));
 };
 
-type CommentsPanelProps = {
-  projectId: string;
+type ReelCardProps = {
+  reel: PitchReel;
   currentUserId: string;
-  onClose: () => void;
-  onCommentPosted: () => void;
 };
 
-const CommentsPanel = ({ projectId, currentUserId, onClose, onCommentPosted }: CommentsPanelProps) => {
+const ReelCard = ({ reel, currentUserId }: ReelCardProps) => {
+  const [liked, setLiked] = useState(reel.isLikedByMe);
+  const [likeCount, setLikeCount] = useState(reel.likeCount);
+  const [saved, setSaved] = useState(reel.isSavedByMe);
+  const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<ProjectComment[] | null>(null);
-  const [draft, setDraft] = useState("");
-  const [isPosting, setIsPosting] = useState(false);
+  const [commentCount, setCommentCount] = useState(reel.commentCount);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [, startTransition] = useTransition();
+
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    listProjectCommentsAction(projectId)
-      .then((result) => !cancelled && setComments(result))
-      .catch(() => !cancelled && setComments([]));
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId]);
+    const video = videoRef.current;
+    if (!video) return;
+    // Mirrors mobile's Reels-style autoplay: mute and play once ≥65% of the
+    // card is visible, pause when scrolled away — same idea as the feed's
+    // active-post tracking, just per-card here since this is a scrollable
+    // list rather than one full-screen video at a time.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.muted = true;
+          void video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.65 }
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
 
-  const submit = async () => {
-    const text = draft.trim();
-    if (!text) return;
-    setIsPosting(true);
-    try {
-      const created = await createProjectCommentAction(projectId, text);
-      setComments((prev) => [...(prev ?? []), created]);
-      setDraft("");
-      onCommentPosted();
-    } catch {
-      window.alert("Couldn't post that comment — try again.");
-    } finally {
-      setIsPosting(false);
+  const handleLike = () => {
+    const next = !liked;
+    setLiked(next);
+    setLikeCount((count) => count + (next ? 1 : -1));
+    startTransition(async () => {
+      try {
+        await toggleReelLikeAction(reel.id);
+      } catch {
+        setLiked(!next);
+        setLikeCount((count) => count + (next ? -1 : 1));
+      }
+    });
+  };
+
+  const handleSave = () => {
+    const next = !saved;
+    setSaved(next);
+    startTransition(async () => {
+      try {
+        await (next ? saveReelAction : unsaveReelAction)(reel.id);
+      } catch {
+        setSaved(!next);
+      }
+    });
+  };
+
+  const handleShare = () => {
+    const url = `${window.location.origin}/startups/${reel.id}`;
+    if (navigator.share) {
+      navigator.share({ title: reel.name, text: reel.tagline, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(
+        () => window.alert("Link copied to clipboard."),
+        () => window.alert(url)
+      );
     }
   };
 
-  const remove = async (commentId: string) => {
-    try {
-      await deleteProjectCommentAction(commentId);
-      setComments((prev) => (prev ?? []).filter((c) => c.id !== commentId));
-    } catch {
-      window.alert("Couldn't remove that comment — try again.");
+  const toggleComments = () => {
+    setShowComments((open) => !open);
+    if (comments === null) {
+      startTransition(async () => {
+        try {
+          setComments(await listProjectCommentsAction(reel.id));
+        } catch {
+          setComments([]);
+        }
+      });
     }
+  };
+
+  const submitComment = () => {
+    const text = commentDraft.trim();
+    if (!text) return;
+    setCommentDraft("");
+    startTransition(async () => {
+      try {
+        const created = await createProjectCommentAction(reel.id, text);
+        setComments((prev) => [...(prev ?? []), created]);
+        setCommentCount((count) => count + 1);
+      } catch {
+        window.alert("Couldn't post that comment — try again.");
+      }
+    });
+  };
+
+  const removeComment = (commentId: string) => {
+    if (!window.confirm("Delete this comment?")) return;
+    startTransition(async () => {
+      try {
+        await deleteProjectCommentAction(commentId);
+        setComments((prev) => (prev ?? []).filter((c) => c.id !== commentId));
+        setCommentCount((count) => Math.max(0, count - 1));
+      } catch {
+        window.alert("Couldn't remove that comment — try again.");
+      }
+    });
   };
 
   return (
-    <div className="absolute inset-y-0 right-0 z-20 flex w-80 flex-col bg-surface shadow-2xl">
-      <div className="flex items-center justify-between border-b border-border/60 p-4">
-        <h2 className="text-sm font-bold text-text">Comments</h2>
-        <button type="button" onClick={onClose} aria-label="Close comments" className="text-muted hover:text-text">
-          <X className="h-4.5 w-4.5" strokeWidth={2} />
-        </button>
-      </div>
+    <article className="glass overflow-hidden rounded-2xl">
+      <Link href={`/startups/${reel.id}`} className="flex items-center gap-2.5 p-4 pb-3 hover:bg-muted-bg/40">
+        <Avatar id={reel.id} name={reel.name} avatarUrl={reel.logoUrl} size="h-10.5 w-10.5" />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-bold text-text">{reel.name}</div>
+          <div className="truncate text-[11.5px] text-muted">{reel.tagline || "Founder pitch"}</div>
+        </div>
+      </Link>
 
-      <div className="flex-1 overflow-y-auto p-4">
-        {comments === null ? (
-          <p className="text-xs text-muted">Loading comments...</p>
-        ) : comments.length === 0 ? (
-          <p className="text-sm text-muted">No comments yet — be the first to say something.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {comments.map((comment) => (
-              <div key={comment.id} className="flex gap-2.5">
-                <Avatar id={comment.author.id} name={comment.author.fullName} avatarUrl={comment.author.avatarUrl} size="h-8 w-8" textSize="text-[11px]" />
-                <div className="min-w-0 flex-1">
-                  <div className="rounded-2xl bg-muted-bg/70 px-3 py-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-text">{comment.author.fullName || "Unknown"}</span>
-                      {comment.author.id === currentUserId ? (
-                        <button type="button" onClick={() => remove(comment.id)} aria-label="Delete comment" className="ml-auto text-muted hover:text-danger">
-                          <X className="h-3 w-3" strokeWidth={2} />
-                        </button>
-                      ) : null}
-                    </div>
-                    <p className="mt-0.5 whitespace-pre-wrap text-[13px] text-text">{comment.content}</p>
-                  </div>
-                  <div className="mt-0.5 pl-3 text-[10.5px] text-muted">{formatRelativeTime(comment.createdAt)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <video
+        ref={videoRef}
+        src={reel.pitchVideoUrl}
+        controls
+        loop
+        playsInline
+        className="max-h-125 w-full bg-black object-contain"
+      />
 
-      <div className="flex items-center gap-2.5 border-t border-border/60 p-3">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Write a comment..."
-          className="h-9 flex-1 rounded-full border border-border/70 bg-muted-bg/60 px-3.5 text-xs text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
-        />
+      <div className="flex items-center gap-1 border-t border-border/60 px-2 py-1">
         <button
           type="button"
-          onClick={submit}
-          disabled={isPosting || !draft.trim()}
-          aria-label="Post comment"
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-primary to-indigo-500 text-on-primary disabled:opacity-40"
+          onClick={handleLike}
+          className={`flex h-9 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${liked ? "text-primary" : "text-muted hover:text-text"}`}
         >
-          <Send className="h-3.5 w-3.5" strokeWidth={2} />
+          <ThumbsUp className="h-4 w-4" strokeWidth={2} fill={liked ? "currentColor" : "none"} />
+          {likeCount}
+        </button>
+        <button
+          type="button"
+          onClick={toggleComments}
+          className={`flex h-9 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${showComments ? "text-primary" : "text-muted hover:text-text"}`}
+        >
+          <MessageCircle className="h-4 w-4" strokeWidth={2} />
+          {commentCount}
+        </button>
+        <button
+          type="button"
+          onClick={handleShare}
+          aria-label="Share pitch"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-muted transition hover:bg-muted-bg/70 hover:text-text"
+        >
+          <Send className="h-4 w-4" strokeWidth={2} />
+        </button>
+
+        <div className="flex-1" />
+
+        <button
+          type="button"
+          onClick={handleSave}
+          aria-label={saved ? "Unsave pitch" : "Save pitch"}
+          className={`flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-muted-bg/70 ${saved ? "text-primary" : "text-muted hover:text-text"}`}
+        >
+          <Bookmark className="h-4 w-4" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
         </button>
       </div>
-    </div>
+
+      {showComments ? (
+        <div className="border-t border-border/60 px-4 py-3">
+          <div className="flex flex-col gap-3">
+            {comments === null ? (
+              <p className="text-xs text-muted">Loading comments...</p>
+            ) : comments.length === 0 ? (
+              <p className="text-xs text-muted">No comments yet — be the first to say something.</p>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.id} className="flex gap-2.5">
+                  <Avatar id={comment.author.id} name={comment.author.fullName} avatarUrl={comment.author.avatarUrl} size="h-8 w-8" textSize="text-[11px]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="rounded-2xl bg-muted-bg/70 px-3 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-text">{comment.author.fullName || "Unknown"}</span>
+                        {comment.author.id === currentUserId ? (
+                          <button
+                            type="button"
+                            onClick={() => removeComment(comment.id)}
+                            aria-label="Delete comment"
+                            className="ml-auto text-muted hover:text-danger"
+                          >
+                            <X className="h-3 w-3" strokeWidth={2} />
+                          </button>
+                        ) : null}
+                      </div>
+                      <p className="mt-0.5 whitespace-pre-wrap text-[13px] text-text">{comment.content}</p>
+                    </div>
+                    <div className="mt-0.5 pl-3 text-[10.5px] text-muted">{formatRelativeTime(comment.createdAt)}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center gap-2.5">
+            <input
+              type="text"
+              value={commentDraft}
+              onChange={(e) => setCommentDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitComment()}
+              placeholder="Write a comment..."
+              className="h-9 flex-1 rounded-full border border-border/70 bg-muted-bg/60 px-3.5 text-xs text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
+            />
+            <button
+              type="button"
+              onClick={submitComment}
+              disabled={!commentDraft.trim()}
+              aria-label="Post comment"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-primary to-indigo-500 text-on-primary disabled:opacity-40"
+            >
+              <Send className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </article>
   );
 };
 
@@ -144,181 +272,49 @@ type PitchReelFeedProps = {
 export const PitchReelFeed = ({ initialItems, initialNextCursor, currentUserId }: PitchReelFeedProps) => {
   const [items, setItems] = useState(initialItems);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
-  const [index, setIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [commentsOpenFor, setCommentsOpenFor] = useState<string | null>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const current = items[index];
+  const stateRef = useRef({ nextCursor, isPending });
+  stateRef.current = { nextCursor, isPending };
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = 0;
-    void video.play().catch(() => {});
-  }, [index]);
-
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !nextCursor) return;
-    setIsLoadingMore(true);
-    try {
-      const page = await loadReelsAction(nextCursor);
+  const loadMore = useCallback(() => {
+    const { nextCursor: cursor, isPending: pending } = stateRef.current;
+    if (!cursor || pending) return;
+    startTransition(async () => {
+      const page = await loadReelsAction(cursor, REEL_PAGE_SIZE);
       setItems((current) => [...current, ...page.items]);
       setNextCursor(page.nextCursor);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, nextCursor]);
-
-  const goTo = useCallback(
-    (nextIndex: number) => {
-      if (nextIndex < 0 || nextIndex >= items.length) return;
-      setIndex(nextIndex);
-      if (nextIndex >= items.length - 2 && nextCursor) void loadMore();
-    },
-    [items.length, nextCursor, loadMore]
-  );
+    });
+  }, []);
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      // Holding a key fires a burst of keydown events (e.repeat) — without
-      // this guard each one advanced the index, tearing through several
-      // videos in a flash (rapid unmount/remount below) before settling,
-      // which read as "flickering" and a momentary layout jump.
-      if (e.repeat) return;
-      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-        e.preventDefault();
-        goTo(index + 1);
-      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-        e.preventDefault();
-        goTo(index - 1);
-      }
+    const onScroll = () => {
+      const scrolledToBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 600;
+      if (scrolledToBottom) loadMore();
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [index, goTo]);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [loadMore]);
 
-  const patchCurrent = (patch: Partial<PitchReel>) => {
-    setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
-  };
-
-  const handleLike = async () => {
-    if (!current) return;
-    const wasLiked = current.isLikedByMe;
-    patchCurrent({ isLikedByMe: !wasLiked, likeCount: current.likeCount + (wasLiked ? -1 : 1) });
-    try {
-      await toggleReelLikeAction(current.id);
-    } catch {
-      patchCurrent({ isLikedByMe: wasLiked, likeCount: current.likeCount });
-    }
-  };
-
-  const handleSave = async () => {
-    if (!current) return;
-    const wasSaved = current.isSavedByMe;
-    patchCurrent({ isSavedByMe: !wasSaved });
-    try {
-      await (wasSaved ? unsaveReelAction(current.id) : saveReelAction(current.id));
-    } catch {
-      patchCurrent({ isSavedByMe: wasSaved });
-    }
-  };
-
-  const handleShare = () => {
-    const url = `${window.location.origin}/startups/${current.id}`;
-    if (navigator.share) {
-      void navigator.share({ title: current.name, text: current.tagline, url });
-    } else {
-      void navigator.clipboard.writeText(url);
-      window.alert("Link copied.");
-    }
-  };
-
-  if (!current) {
+  if (items.length === 0) {
     return (
-      <div className="flex h-[calc(100vh-140px)] items-center justify-center rounded-2xl bg-black">
-        <p className="text-sm text-white/70">No pitch videos yet.</p>
+      <div className="glass rounded-2xl p-10 text-center">
+        <p className="text-sm font-semibold text-text">No pitch videos yet</p>
+        <p className="mt-1 text-sm text-muted">Founders who upload a pitch video will show up here.</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[calc(100vh-140px)] overflow-hidden rounded-2xl bg-black">
-      <video
-        ref={videoRef}
-        src={current.pitchVideoUrl}
-        className="h-full w-full object-contain"
-        loop
-        muted={isMuted}
-        playsInline
-        onClick={(e) => (e.currentTarget.paused ? void e.currentTarget.play() : e.currentTarget.pause())}
-      />
+    <div className="flex flex-col gap-4">
+      {items.map((reel) => (
+        <ReelCard key={reel.id} reel={reel} currentUserId={currentUserId} />
+      ))}
 
-      <button
-        type="button"
-        onClick={() => setIsMuted((m) => !m)}
-        aria-label={isMuted ? "Unmute" : "Mute"}
-        className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60"
-      >
-        {isMuted ? <VolumeX className="h-4 w-4" strokeWidth={2} /> : <Volume2 className="h-4 w-4" strokeWidth={2} />}
-      </button>
-
-      <div className="absolute right-4 top-1/2 flex -translate-y-1/2 flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => goTo(index - 1)}
-          disabled={index === 0}
-          aria-label="Previous"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30"
-        >
-          <ChevronUp className="h-4.5 w-4.5" strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          onClick={() => goTo(index + 1)}
-          disabled={index >= items.length - 1 && !nextCursor}
-          aria-label="Next"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30"
-        >
-          <ChevronDown className="h-4.5 w-4.5" strokeWidth={2} />
-        </button>
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent px-5 pb-5 pt-14">
-        <Link href={`/startups/${current.id}`} className="flex items-center gap-2 text-white hover:opacity-90">
-          <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-white/20">
-            {current.logoUrl ? <img src={current.logoUrl} alt="" className="h-full w-full object-cover" /> : null}
-          </div>
-          <span className="text-sm font-bold">{current.name}</span>
-        </Link>
-        {current.tagline ? <p className="mt-1.5 max-w-lg text-xs text-white/85">{current.tagline}</p> : null}
-
-        <div className="mt-3 flex items-center gap-6">
-          <button type="button" onClick={handleLike} className="flex items-center gap-1.5 text-white">
-            <ThumbsUp className="h-4.5 w-4.5" strokeWidth={2} fill={current.isLikedByMe ? "currentColor" : "none"} />
-            <span className="text-xs font-semibold">{current.likeCount}</span>
-          </button>
-          <button type="button" onClick={() => setCommentsOpenFor(current.id)} className="flex items-center gap-1.5 text-white">
-            <MessageCircle className="h-4.5 w-4.5" strokeWidth={2} />
-            <span className="text-xs font-semibold">{current.commentCount}</span>
-          </button>
-          <button type="button" onClick={handleSave} className="text-white">
-            <Bookmark className="h-4.5 w-4.5" strokeWidth={2} fill={current.isSavedByMe ? "currentColor" : "none"} />
-          </button>
-          <button type="button" onClick={handleShare} aria-label="Share" className="text-xs font-semibold text-white">
-            Share
-          </button>
+      {nextCursor && isPending ? (
+        <div className="flex justify-center py-3">
+          <p className="text-sm font-semibold text-muted">Loading more...</p>
         </div>
-      </div>
-
-      {commentsOpenFor === current.id ? (
-        <CommentsPanel
-          projectId={current.id}
-          currentUserId={currentUserId}
-          onClose={() => setCommentsOpenFor(null)}
-          onCommentPosted={() => patchCurrent({ commentCount: current.commentCount + 1 })}
-        />
       ) : null}
     </div>
   );

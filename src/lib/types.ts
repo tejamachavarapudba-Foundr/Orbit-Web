@@ -207,14 +207,26 @@ export type ProjectComment = {
 
 export type TrendingStartup = {
   id: string;
+  ownerId?: string;
   name: string;
   tagline: string;
+  description?: string;
   stage: string;
   projectType: string;
   founderVerified?: boolean;
   logoUrl?: string;
   coverUrl?: string;
   pitchVideoUrl?: string;
+  websiteUrl?: string;
+  location?: string;
+  foundedYear?: number | null;
+  fundingStage?: string;
+  askAmount?: string;
+  equityPercent?: string;
+  investorSnapshot?: { isCompleted: boolean; completionPercentage: number } | null;
+  likeCount?: number;
+  teamMemberCount?: number;
+  isLikedByMe?: boolean;
 };
 
 export type SavedStartup = {
@@ -225,18 +237,9 @@ export type SavedStartup = {
 };
 
 export type StartupDetail = TrendingStartup & {
-  description?: string;
-  websiteUrl?: string;
-  location?: string;
   industryTags?: string[];
   techStack?: string[];
   lookingFor?: string[];
-  pitchVideoUrl?: string;
-  askAmount?: string;
-  equityPercent?: string;
-  fundingStage?: string;
-  foundedYear?: number | null;
-  investorSnapshot?: { isCompleted: boolean; completionPercentage: number } | null;
   createdAt: string;
   owner: { id: string; fullName: string; headline: string; avatarUrl: string } | null;
   members: { id: string; role: string; user: { id: string; fullName: string; avatarUrl: string; headline: string } }[];
@@ -279,12 +282,23 @@ export type Job = {
   heading: string;
   role: string;
   experience: string;
+  location?: string;
+  openings?: number;
   skills: string[];
   description: string;
   posterId: string;
   createdAt: string;
   poster: Profile;
   applications: { id: string; status: string; applicantId: string }[];
+};
+
+export type JobAnalytics = {
+  totalPosts: number;
+  totalApplications: number;
+  accepted: number;
+  rejected: number;
+  pending: number;
+  onboardCount: number;
 };
 
 export type JobApplication = {

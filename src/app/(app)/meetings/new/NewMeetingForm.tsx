@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { Plus, X } from "lucide-react";
 
 import { PeoplePicker } from "@/components/PeoplePicker";
+import { TimeSelect } from "@/components/TimeSelect";
 import { createMeetingProposalAction, getOpenSlotsAction, type CreateMeetingState } from "../actions";
 import type { Profile, ProposedSlot, TrendingStartup } from "@/lib/types";
 
@@ -24,11 +25,11 @@ const formatSlot = (slot: ProposedSlot) =>
   ` at ${slot.time}`;
 
 type NewMeetingFormProps = {
-  myProjects: TrendingStartup[];
+  projects: TrendingStartup[];
   people: Profile[];
 };
 
-export const NewMeetingForm = ({ myProjects, people }: NewMeetingFormProps) => {
+export const NewMeetingForm = ({ projects, people }: NewMeetingFormProps) => {
   const [state, formAction, isPending] = useActionState(createMeetingProposalAction, initialState);
 
   const [inviteMode, setInviteMode] = useState<"startup" | "people">("people");
@@ -100,8 +101,8 @@ export const NewMeetingForm = ({ myProjects, people }: NewMeetingFormProps) => {
         </div>
 
         {inviteMode === "startup" ? (
-          myProjects.length === 0 ? (
-            <p className="text-xs text-muted">You don&apos;t have a startup listed yet.</p>
+          projects.length === 0 ? (
+            <p className="text-xs text-muted">No other startups on Orbit yet.</p>
           ) : (
             <select
               name="targetStartupId"
@@ -113,7 +114,7 @@ export const NewMeetingForm = ({ myProjects, people }: NewMeetingFormProps) => {
               <option value="" disabled>
                 Select a startup...
               </option>
-              {myProjects.map((p) => (
+              {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
@@ -165,7 +166,7 @@ export const NewMeetingForm = ({ myProjects, people }: NewMeetingFormProps) => {
           {dateSlots.map((slot, index) => (
             <div key={index} className="flex items-center gap-2">
               <input type="date" name={`slot${index + 1}Date`} defaultValue={slot.date} className={inputClass} />
-              <input type="time" name={`slot${index + 1}Time`} defaultValue={slot.time} className={inputClass} />
+              <TimeSelect name={`slot${index + 1}Time`} defaultValue={slot.time} className={inputClass} />
               {dateSlots.length > 1 ? (
                 <button
                   type="button"

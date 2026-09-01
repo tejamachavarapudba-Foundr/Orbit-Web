@@ -3,8 +3,13 @@
 import { apiFetch } from "@/lib/api";
 import type { PitchReelsPage } from "@/lib/types";
 
-export const loadReelsAction = async (cursor?: string): Promise<PitchReelsPage> =>
-  apiFetch<PitchReelsPage>(`/projects/reels${cursor ? `?cursor=${cursor}` : ""}`);
+export const loadReelsAction = async (cursor?: string, limit?: number): Promise<PitchReelsPage> => {
+  const params = new URLSearchParams();
+  if (cursor) params.set("cursor", cursor);
+  if (limit) params.set("limit", String(limit));
+  const qs = params.toString();
+  return apiFetch<PitchReelsPage>(`/projects/reels${qs ? `?${qs}` : ""}`);
+};
 
 export const toggleReelLikeAction = async (projectId: string): Promise<{ liked: boolean }> =>
   apiFetch(`/projects/${projectId}/like`, { method: "POST" });
