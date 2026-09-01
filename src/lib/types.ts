@@ -121,6 +121,7 @@ export type PostComment = {
   id: string;
   content: string;
   createdAt: string;
+  parentId?: string | null;
   author: PostAuthor;
 };
 

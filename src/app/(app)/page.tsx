@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { FeedPostList } from "./FeedPostList";
 import { PeopleYouMayKnow } from "@/components/PeopleYouMayKnow";
 import { StartupsHiring } from "@/components/StartupsHiring";
@@ -63,10 +65,19 @@ const loadPeopleYouMayKnow = async (myId: string): Promise<Profile[]> => {
 
 const FEED_PAGE_SIZE = 10;
 
+const loadFeed = async (): Promise<{ posts: Post[]; failed: boolean }> => {
+  try {
+    return { posts: await apiFetch<Post[]>(`/posts?page=1&limit=${FEED_PAGE_SIZE}`), failed: false };
+  } catch (error) {
+    if (error instanceof ApiError) return { posts: [], failed: true };
+    throw error;
+  }
+};
+
 export default async function HomePage() {
   const me = await getMe();
-  const [posts, trending, savedIds, hiringJobs, suggestedPeople] = await Promise.all([
-    apiFetch<Post[]>(`/posts?page=1&limit=${FEED_PAGE_SIZE}`),
+  const [{ posts, failed }, trending, savedIds, hiringJobs, suggestedPeople] = await Promise.all([
+    loadFeed(),
     loadTrending(),
     loadSavedIds(),
     loadHiringJobs(),
@@ -76,14 +87,24 @@ export default async function HomePage() {
   return (
     <div className="grid max-w-220 grid-cols-[minmax(0,1fr)_300px] items-start gap-5">
       <div className="min-w-0">
-        <FeedPostList
-          initialPosts={posts}
-          initialHasMore={posts.length === FEED_PAGE_SIZE}
-          currentUserId={me.id}
-          currentUserName={me.profile.fullName}
-          currentUserAvatarUrl={me.profile.avatarUrl}
-          initialSavedIds={Array.from(savedIds)}
-        />
+        {failed ? (
+          <div className="glass rounded-2xl p-10 text-center">
+            <p className="text-sm font-semibold text-text">Couldn&apos;t load your feed</p>
+            <p className="mt-1 text-sm text-muted">Something went wrong on our end.</p>
+            <Link href="/" className="mt-4 inline-block rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-2 text-xs font-bold text-on-primary">
+              Retry
+            </Link>
+          </div>
+        ) : (
+          <FeedPostList
+            initialPosts={posts}
+            initialHasMore={posts.length === FEED_PAGE_SIZE}
+            currentUserId={me.id}
+            currentUserName={me.profile.fullName}
+            currentUserAvatarUrl={me.profile.avatarUrl}
+            initialSavedIds={Array.from(savedIds)}
+          />
+        )}
       </div>
 
       <aside className="sticky top-20 flex flex-col gap-4">

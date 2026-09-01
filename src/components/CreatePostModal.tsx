@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, Link as LinkIcon, X } from "lucide-react";
 
 import { createPostAction, type CreatePostState } from "@/app/(app)/actions";
 import { Avatar } from "@/components/Avatar";
@@ -24,12 +24,18 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wasPending = useRef(false);
   const [files, setFiles] = useState<PickedFile[]>([]);
+  const [content, setContent] = useState("");
+  const [showLinkField, setShowLinkField] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
 
   useEffect(() => {
     if (wasPending.current && !isPending && !state.error) {
       formRef.current?.reset();
       files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
       setFiles([]);
+      setContent("");
+      setShowLinkField(false);
+      setLinkUrl("");
       onClose();
     }
     wasPending.current = isPending;
@@ -93,11 +99,40 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
               name="content"
               rows={5}
               autoFocus
+              maxLength={5000}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               placeholder="Share an update, milestone or launch..."
               className="w-full resize-none rounded-xl border border-border/70 bg-muted-bg/60 px-3.5 py-3 text-sm text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
             />
+            <div className="mt-1 text-right text-[11px] text-muted">{content.length}/5000</div>
 
             <input type="file" name="media" ref={fileInputRef} multiple accept="image/*,video/*" hidden onChange={(e) => addFiles(e.target.files)} />
+
+            {showLinkField ? (
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="url"
+                  name="linkUrl"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://..."
+                  autoCapitalize="none"
+                  className="h-9 flex-1 rounded-xl border border-border/70 bg-muted-bg/60 px-3.5 text-xs text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLinkField(false);
+                    setLinkUrl("");
+                  }}
+                  aria-label="Remove link"
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-muted hover:bg-muted-bg/70 hover:text-text"
+                >
+                  <X className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+              </div>
+            ) : null}
 
             {files.length > 0 ? (
               <div className="mt-3 grid grid-cols-3 gap-2">
@@ -125,15 +160,25 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
             {state.error ? <p className="mt-2 text-xs font-medium text-danger">{state.error}</p> : null}
 
             <div className="mt-3 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={files.length >= 10}
-                className="flex items-center gap-1.5 rounded-full border border-border/70 px-3 py-1.5 text-xs font-bold text-muted transition hover:bg-muted-bg/70 hover:text-text disabled:opacity-40"
-              >
-                <ImageIcon className="h-3.5 w-3.5" strokeWidth={2} />
-                Photo / video
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={files.length >= 10}
+                  className="flex items-center gap-1.5 rounded-full border border-border/70 px-3 py-1.5 text-xs font-bold text-muted transition hover:bg-muted-bg/70 hover:text-text disabled:opacity-40"
+                >
+                  <ImageIcon className="h-3.5 w-3.5" strokeWidth={2} />
+                  Photo / video
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowLinkField((v) => !v)}
+                  className="flex items-center gap-1.5 rounded-full border border-border/70 px-3 py-1.5 text-xs font-bold text-muted transition hover:bg-muted-bg/70 hover:text-text"
+                >
+                  <LinkIcon className="h-3.5 w-3.5" strokeWidth={2} />
+                  {showLinkField ? "Hide URL" : "Add URL"}
+                </button>
+              </div>
 
               <div className="flex gap-2">
                 <button
@@ -145,7 +190,7 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
                 </button>
                 <button
                   type="submit"
-                  disabled={isPending}
+                  disabled={isPending || !content.trim()}
                   className="rounded-full bg-gradient-to-r from-primary to-indigo-500 px-4 py-1.5 text-xs font-bold text-on-primary shadow-md shadow-primary/25 disabled:opacity-60"
                 >
                   {isPending ? "Posting..." : "Post"}

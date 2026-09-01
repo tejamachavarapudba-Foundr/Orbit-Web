@@ -20,15 +20,17 @@ export const createPostAction = async (
   formData: FormData
 ): Promise<CreatePostState> => {
   const content = String(formData.get("content") ?? "").trim();
+  const linkUrl = String(formData.get("linkUrl") ?? "").trim();
   const files = formData.getAll("media").filter((f): f is File => f instanceof File && f.size > 0);
 
-  if (!content && files.length === 0) {
-    return { error: "Write something or attach a photo before posting." };
+  if (!content) {
+    return { error: "Write something before posting." };
   }
 
   const body = new FormData();
   body.set("content", content);
   body.set("category", "Update");
+  if (linkUrl) body.set("linkUrl", linkUrl);
   files.forEach((file) => body.append("files", file));
 
   try {
@@ -78,8 +80,8 @@ export const getFollowStatusAction = async (targetId: string): Promise<boolean> 
 export const listCommentsAction = async (postId: string): Promise<PostComment[]> =>
   apiFetch(`/comments?postId=${postId}`);
 
-export const createCommentAction = async (postId: string, content: string): Promise<PostComment> =>
-  apiFetch("/comments", { method: "POST", body: { postId, content } });
+export const createCommentAction = async (postId: string, content: string, parentId?: string): Promise<PostComment> =>
+  apiFetch("/comments", { method: "POST", body: { postId, content, parentId } });
 
 export const deleteCommentAction = async (commentId: string): Promise<void> => {
   await apiFetch(`/comments/${commentId}`, { method: "DELETE" });

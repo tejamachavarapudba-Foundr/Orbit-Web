@@ -109,11 +109,16 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
     return undefined as T;
   }
 
-  // A 200 with a genuinely empty body (seen once from an endpoint that
-  // returned null for a since-deleted account) made res.json() throw
-  // "Unexpected end of JSON input" uncaught, crashing the whole page with
-  // Next.js's generic "This page couldn't load" instead of a clear error.
+  // A 200 with a genuinely empty body used to make res.json() throw
+  // "Unexpected end of JSON input" uncaught. The one known cause (an
+  // account deleted after its JWT was issued) is now fixed server-side —
+  // /auth/me throws a proper 401 for that case instead — so an empty body
+  // on a 200 today is a real anomaly (e.g. a transient network blip), not
+  // an expected "no data" case. Throwing ApiError here lets existing
+  // call sites' try/catch(ApiError) degrade gracefully (trending → [],
+  // saved posts → [], etc.) instead of silently handing back `undefined`
+  // and crashing later on `.map`/property access with a confusing stack.
   const text = await res.text();
-  if (!text) return undefined as T;
+  if (!text) throw new ApiError(res.status, "Empty response from server");
   return JSON.parse(text) as T;
 };

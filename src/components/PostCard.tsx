@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bookmark, EyeOff, Flag, Heart, Link as LinkIcon, MessageCircle, MoreHorizontal, Pencil, Send, Share2, Trash2, UserMinus, UserPlus, X } from "lucide-react";
+import { Bookmark, EyeOff, Flag, Heart, Link as LinkIcon, MessageCircle, MoreHorizontal, Pencil, Send, Share2, Trash2, UserPlus, X } from "lucide-react";
 
 import {
   createCommentAction,
@@ -61,12 +61,25 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
   const [comments, setComments] = useState<PostComment[] | null>(null);
   const [commentCount, setCommentCount] = useState(post.comments.length);
   const [commentDraft, setCommentDraft] = useState("");
+  const [replyingTo, setReplyingTo] = useState<PostComment | null>(null);
 
   const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
   const [notInterested, setNotInterested] = useState(false);
   const [reported, setReported] = useState(false);
 
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (isOwn) return;
+    let cancelled = false;
+    getFollowStatusAction(post.author.id)
+      .then((following) => !cancelled && setIsFollowing(following))
+      .catch(() => !cancelled && setIsFollowing(false));
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.author.id, isOwn]);
 
   if (deleted || notInterested) return null;
 
@@ -111,19 +124,6 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
     });
   };
 
-  const openMenu = () => {
-    setMenuOpen(true);
-    if (!isOwn && isFollowing === null) {
-      startTransition(async () => {
-        try {
-          setIsFollowing(await getFollowStatusAction(post.author.id));
-        } catch {
-          setIsFollowing(false);
-        }
-      });
-    }
-  };
-
   const handleShare = () => {
     setMenuOpen(false);
     const url = `${window.location.origin}/p/${post.id}`;
@@ -139,7 +139,7 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
 
   const handleToggleFollow = () => {
     const next = !isFollowing;
-    setMenuOpen(false);
+    if (!next && !window.confirm(`Unfollow ${post.author.fullName || "this person"}?`)) return;
     setIsFollowing(next);
     startTransition(async () => {
       try {
@@ -212,13 +212,25 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
     }
   };
 
+  const startReply = (comment: PostComment) => {
+    setReplyingTo(comment);
+    setCommentDraft("");
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
+    setCommentDraft("");
+  };
+
   const submitComment = () => {
     const text = commentDraft.trim();
     if (!text) return;
+    const parentId = replyingTo?.id;
     setCommentDraft("");
+    setReplyingTo(null);
     startTransition(async () => {
       try {
-        const created = await createCommentAction(post.id, text);
+        const created = await createCommentAction(post.id, text, parentId);
         setComments((prev) => [...(prev ?? []), created]);
         setCommentCount((count) => count + 1);
       } catch {
@@ -228,16 +240,52 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
   };
 
   const removeComment = (commentId: string) => {
+    if (!window.confirm("Delete this comment?")) return;
     startTransition(async () => {
       try {
         await deleteCommentAction(commentId);
-        setComments((prev) => (prev ?? []).filter((c) => c.id !== commentId));
+        setComments((prev) => (prev ?? []).filter((c) => c.id !== commentId && c.parentId !== commentId));
         setCommentCount((count) => Math.max(0, count - 1));
       } catch {
         window.alert("Couldn't remove that comment — try again.");
       }
     });
   };
+
+  const topLevelComments = (comments ?? []).filter((c) => !c.parentId);
+  const repliesFor = (commentId: string) => (comments ?? []).filter((c) => c.parentId === commentId);
+
+  const renderCommentRow = (comment: PostComment, isReply: boolean) => (
+    <div key={comment.id} className="flex gap-2.5">
+      <Avatar id={comment.author.id} name={comment.author.fullName} avatarUrl={comment.author.avatarUrl} size="h-8 w-8" textSize="text-[11px]" />
+      <div className="min-w-0 flex-1">
+        <div className="rounded-2xl bg-muted-bg/70 px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-text">{comment.author.fullName || "Unknown"}</span>
+            {comment.author.id === currentUserId ? (
+              <button
+                type="button"
+                onClick={() => removeComment(comment.id)}
+                aria-label="Delete comment"
+                className="ml-auto text-muted hover:text-danger"
+              >
+                <X className="h-3 w-3" strokeWidth={2} />
+              </button>
+            ) : null}
+          </div>
+          <p className="mt-0.5 whitespace-pre-wrap text-[13px] text-text">{comment.content}</p>
+        </div>
+        <div className="mt-0.5 flex items-center gap-3 pl-3 text-[10.5px] text-muted">
+          <span>{formatRelativeTime(comment.createdAt)}</span>
+          {!isReply ? (
+            <button type="button" onClick={() => startReply(comment)} className="font-bold hover:text-text">
+              Reply
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <article className="glass overflow-hidden rounded-2xl">
@@ -256,14 +304,33 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
             <div className="text-[11.5px] text-muted">
               {post.author.headline ? `${post.author.headline} · ` : ""}
               {formatRelativeTime(post.createdAt)}
-              {post.category ? ` · ${post.category}` : ""}
             </div>
           </div>
+
+          {!isOwn ? (
+            <button
+              type="button"
+              onClick={handleToggleFollow}
+              disabled={isFollowing === null}
+              className={`flex-shrink-0 self-start rounded-full border px-3 py-1 text-[11px] font-bold transition disabled:opacity-50 ${
+                isFollowing
+                  ? "border-border/70 text-muted hover:bg-muted-bg/70 hover:text-text"
+                  : "border-primary/40 text-primary hover:bg-primary-muted"
+              }`}
+            >
+              {isFollowing === null ? "..." : isFollowing ? "Following" : (
+                <span className="flex items-center gap-1">
+                  <UserPlus className="h-3 w-3" strokeWidth={2.5} />
+                  Follow
+                </span>
+              )}
+            </button>
+          ) : null}
 
           <div className="relative flex-shrink-0" onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setMenuOpen(false)}>
             <button
               type="button"
-              onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
+              onClick={() => setMenuOpen((open) => !open)}
               aria-label="Post options"
               className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-muted-bg/70 hover:text-text"
             >
@@ -271,14 +338,6 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
             </button>
             {menuOpen ? (
               <div className="glass-strong absolute right-0 top-full z-20 mt-1 w-48 overflow-hidden rounded-xl py-1.5">
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70"
-                >
-                  <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
-                  Share
-                </button>
                 {isOwn ? (
                   <>
                     <button
@@ -300,15 +359,6 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
                   </>
                 ) : (
                   <>
-                    <button
-                      type="button"
-                      onClick={handleToggleFollow}
-                      disabled={isFollowing === null}
-                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70 disabled:opacity-50"
-                    >
-                      {isFollowing ? <UserMinus className="h-3.5 w-3.5" strokeWidth={2} /> : <UserPlus className="h-3.5 w-3.5" strokeWidth={2} />}
-                      {isFollowing === null ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
-                    </button>
                     <button
                       type="button"
                       onClick={handleNotInterested}
@@ -339,6 +389,7 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
               onChange={(e) => setEditValue(e.target.value)}
               rows={4}
               autoFocus
+              maxLength={5000}
               className="w-full resize-none rounded-xl border border-border/70 bg-muted-bg/60 px-3.5 py-3 text-sm text-text outline-none focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
             />
             <div className="mt-2 flex justify-end gap-2 pb-3">
@@ -361,9 +412,13 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
         ) : (
           <div className="mt-3">
             <p className={`whitespace-pre-wrap text-sm leading-relaxed text-text ${isExpanded ? "" : "line-clamp-2"}`}>{content}</p>
-            {!isExpanded && content.length > 140 ? (
-              <button type="button" onClick={() => setIsExpanded(true)} className="mt-0.5 text-xs font-bold text-muted hover:text-text">
-                ...more
+            {content.length > 140 ? (
+              <button
+                type="button"
+                onClick={() => setIsExpanded((expanded) => !expanded)}
+                className="mt-0.5 text-xs font-bold text-muted hover:text-text"
+              >
+                {isExpanded ? "...less" : "...more"}
               </button>
             ) : null}
           </div>
@@ -405,6 +460,14 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
         </button>
         <button
           type="button"
+          onClick={handleShare}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-muted transition hover:bg-muted-bg/70 hover:text-text"
+        >
+          <Share2 className="h-4 w-4" strokeWidth={2} />
+          Share
+        </button>
+        <button
+          type="button"
           onClick={handleSave}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${saved ? "text-primary" : "text-muted hover:text-text"}`}
         >
@@ -418,35 +481,32 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
           <div className="flex flex-col gap-3">
             {comments === null ? (
               <p className="text-xs text-muted">Loading comments...</p>
-            ) : comments.length === 0 ? (
+            ) : topLevelComments.length === 0 ? (
               <p className="text-xs text-muted">No comments yet — be the first to say something.</p>
             ) : (
-              comments.map((comment) => (
-                <div key={comment.id} className="flex gap-2.5">
-                  <Avatar id={comment.author.id} name={comment.author.fullName} avatarUrl={comment.author.avatarUrl} size="h-8 w-8" textSize="text-[11px]" />
-                  <div className="min-w-0 flex-1">
-                    <div className="rounded-2xl bg-muted-bg/70 px-3 py-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-text">{comment.author.fullName || "Unknown"}</span>
-                        {comment.author.id === currentUserId ? (
-                          <button
-                            type="button"
-                            onClick={() => removeComment(comment.id)}
-                            aria-label="Delete comment"
-                            className="ml-auto text-muted hover:text-danger"
-                          >
-                            <X className="h-3 w-3" strokeWidth={2} />
-                          </button>
-                        ) : null}
-                      </div>
-                      <p className="mt-0.5 whitespace-pre-wrap text-[13px] text-text">{comment.content}</p>
+              topLevelComments.map((comment) => (
+                <div key={comment.id} className="flex flex-col gap-2.5">
+                  {renderCommentRow(comment, false)}
+                  {repliesFor(comment.id).length > 0 ? (
+                    <div className="ml-10 flex flex-col gap-2.5">
+                      {repliesFor(comment.id).map((reply) => renderCommentRow(reply, true))}
                     </div>
-                    <div className="mt-0.5 pl-3 text-[10.5px] text-muted">{formatRelativeTime(comment.createdAt)}</div>
-                  </div>
+                  ) : null}
                 </div>
               ))
             )}
           </div>
+
+          {replyingTo ? (
+            <div className="mt-3 flex items-center justify-between rounded-lg bg-muted-bg/60 px-3 py-1.5 text-xs text-muted">
+              <span>
+                Replying to <span className="font-bold text-text">{replyingTo.author.fullName || "Unknown"}</span>
+              </span>
+              <button type="button" onClick={cancelReply} aria-label="Cancel reply" className="hover:text-text">
+                <X className="h-3.5 w-3.5" strokeWidth={2} />
+              </button>
+            </div>
+          ) : null}
 
           <div className="mt-3 flex items-center gap-2.5">
             <Avatar id={currentUserId} name={currentUserName} avatarUrl={currentUserAvatarUrl} size="h-8 w-8" textSize="text-[11px]" />
@@ -455,7 +515,8 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
               value={commentDraft}
               onChange={(e) => setCommentDraft(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitComment()}
-              placeholder="Write a comment..."
+              maxLength={1000}
+              placeholder={replyingTo ? "Write a reply..." : "Write a comment..."}
               className="h-9 flex-1 rounded-full border border-border/70 bg-muted-bg/60 px-3.5 text-xs text-text outline-none placeholder:text-muted focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
             />
             <button
