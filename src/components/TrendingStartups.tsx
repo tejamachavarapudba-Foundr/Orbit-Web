@@ -34,10 +34,17 @@ export const TrendingStartups = ({ startups }: TrendingStartupsProps) => {
             href={`/startups/${startup.id}`}
             className={`flex gap-2.5 rounded-xl px-1 py-2.5 transition hover:bg-muted-bg/60 ${index > 0 ? "border-t border-border/60" : ""}`}
           >
-            <div
-              className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-display text-xs font-bold text-white ${gradientFor(startup.id)}`}
-            >
-              {startup.name.charAt(0).toUpperCase()}
+            <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg border border-border/60">
+              {startup.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={startup.logoUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div
+                  className={`flex h-full w-full items-center justify-center bg-gradient-to-br font-display text-xs font-bold text-white ${gradientFor(startup.id)}`}
+                >
+                  {startup.name.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1 text-xs font-bold text-text">

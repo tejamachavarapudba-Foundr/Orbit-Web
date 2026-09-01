@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Rocket } from "lucide-react";
+import { PlayCircle, Plus, Rocket } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -17,18 +17,39 @@ const gradients = ["from-sky-400 to-indigo-500", "from-amber-400 to-red-500", "f
 const gradientFor = (seed: string) => gradients[seed.charCodeAt(0) % gradients.length];
 
 const StartupCard = ({ startup }: { startup: ProjectRow }) => (
-  <Link href={`/startups/${startup.id}`} className="glass flex flex-col gap-2.5 rounded-2xl p-4 transition hover:-translate-y-0.5">
-    <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br font-display text-sm font-bold text-white ${gradientFor(startup.id)}`}>
-      {startup.name.charAt(0).toUpperCase()}
-    </div>
-    <div className="flex items-center gap-1.5">
-      <h3 className="truncate text-sm font-bold text-text">{startup.name}</h3>
-      {startup.founderVerified ? <VerifiedBadge size="sm" /> : null}
-    </div>
-    <p className="line-clamp-2 text-xs text-muted">{startup.tagline || "No tagline yet"}</p>
-    <div className="mt-auto flex items-center gap-2 pt-1">
-      <span className="rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold capitalize text-muted">{startup.stage}</span>
-      <span className="rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold capitalize text-muted">{startup.projectType?.replace(/_/g, " ")}</span>
+  <Link href={`/startups/${startup.id}`} className="glass flex flex-col overflow-hidden rounded-2xl transition hover:-translate-y-0.5">
+    {startup.coverUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={startup.coverUrl} alt="" className="h-16 w-full object-cover" />
+    ) : (
+      <div className={`h-16 w-full bg-gradient-to-br ${gradientFor(startup.id)}`} />
+    )}
+    <div className="flex flex-col gap-2.5 p-4 pt-0">
+      <div className="-mt-6 mb-1 h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+        {startup.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={startup.logoUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center font-display text-sm font-bold text-primary">
+            {startup.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <h3 className="truncate text-sm font-bold text-text">{startup.name}</h3>
+        {startup.founderVerified ? <VerifiedBadge size="sm" /> : null}
+      </div>
+      <p className="line-clamp-2 text-xs text-muted">{startup.tagline || "No tagline yet"}</p>
+      {startup.pitchVideoUrl ? (
+        <span className="flex w-fit items-center gap-1.5 self-start rounded-md bg-primary-muted px-2.5 py-1 text-[10.5px] font-bold text-primary">
+          <PlayCircle className="h-3 w-3" strokeWidth={2} />
+          Founder pitch
+        </span>
+      ) : null}
+      <div className="mt-auto flex items-center gap-2 pt-1">
+        <span className="rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold capitalize text-muted">{startup.stage}</span>
+        <span className="rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold capitalize text-muted">{startup.projectType?.replace(/_/g, " ")}</span>
+      </div>
     </div>
   </Link>
 );

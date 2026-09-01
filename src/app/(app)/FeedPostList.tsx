@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { PostCard } from "@/components/PostCard";
 import type { Post } from "@/lib/types";
@@ -32,32 +32,38 @@ export const FeedPostList = ({
   const [isPending, startTransition] = useTransition();
   const savedIds = new Set(initialSavedIds);
 
+  // Read via a ref inside the scroll handler (rather than as effect deps)
+  // so the listener is attached exactly once for the component's lifetime.
+  // Re-attaching it every time `page`/`hasMore`/`isPending` changed used to
+  // also re-run an eager "check right now" call on every successful load —
+  // on a short feed (or a tall viewport) that chained into several loads
+  // firing back-to-back within one scroll gesture, inserting posts in a
+  // rapid burst that read as flickering.
+  const stateRef = useRef({ page, hasMore, isPending });
+  stateRef.current = { page, hasMore, isPending };
+
   const loadMore = useCallback(() => {
+    const { page: currentPage, hasMore: currentHasMore, isPending: currentIsPending } = stateRef.current;
+    if (!currentHasMore || currentIsPending) return;
     startTransition(async () => {
-      const nextPage = page + 1;
+      const nextPage = currentPage + 1;
       const nextPosts = await loadMorePostsAction(nextPage);
       setPosts((current) => [...current, ...nextPosts]);
       setPage(nextPage);
       setHasMore(nextPosts.length === FEED_PAGE_SIZE);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, []);
 
   useEffect(() => {
-    if (!hasMore || isPending) return;
     // Mirrors mobile's onEndReachedThreshold={0.2} — start loading the next
     // page a bit before the user actually scrolls to the very bottom.
-    // A plain scroll listener (rather than IntersectionObserver) is used
-    // here since it's driven by real scroll position, not the compositor's
-    // async intersection timing.
     const onScroll = () => {
       const scrolledToBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 600;
       if (scrolledToBottom) loadMore();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
-  }, [hasMore, isPending, loadMore]);
+  }, [loadMore]);
 
   if (posts.length === 0) {
     return (

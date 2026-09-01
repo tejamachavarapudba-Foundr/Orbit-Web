@@ -40,7 +40,7 @@ export const NewMeetingForm = ({ myProjects, people }: NewMeetingFormProps) => {
   const [selectedOpenSlot, setSelectedOpenSlot] = useState(0);
   const [isLoadingSlots, startSlotsTransition] = useTransition();
 
-  const [dateSlots, setDateSlots] = useState<{ date: string; time: string }[]>([{ date: "", time: "" }]);
+  const [dateSlots, setDateSlots] = useState<{ date: string; time: string }[]>([{ date: "", time: "10:00" }]);
 
   const singleInviteeId = inviteMode === "people" && selectedPeople.length === 1 ? selectedPeople[0].id : null;
 
@@ -181,7 +181,7 @@ export const NewMeetingForm = ({ myProjects, people }: NewMeetingFormProps) => {
           {dateSlots.length < 3 ? (
             <button
               type="button"
-              onClick={() => setDateSlots((prev) => [...prev, { date: "", time: "" }])}
+              onClick={() => setDateSlots((prev) => [...prev, { date: "", time: "10:00" }])}
               className="flex items-center gap-1.5 self-start text-xs font-bold text-primary"
             >
               <Plus className="h-3.5 w-3.5" strokeWidth={2} />

@@ -14,13 +14,14 @@ const inputClass =
 type NewEventFormProps = {
   communities: Community[];
   people: Profile[];
+  initialCommunityId?: string;
 };
 
-export const NewEventForm = ({ communities, people }: NewEventFormProps) => {
+export const NewEventForm = ({ communities, people, initialCommunityId }: NewEventFormProps) => {
   const [state, formAction, isPending] = useActionState(createEventAction, initialState);
 
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [communityId, setCommunityId] = useState("");
+  const [isPrivate, setIsPrivate] = useState(Boolean(initialCommunityId));
+  const [communityId, setCommunityId] = useState(initialCommunityId ?? "");
   const [selectedPeople, setSelectedPeople] = useState<Profile[]>([]);
   const selectedIds = new Set(selectedPeople.map((p) => p.id));
 

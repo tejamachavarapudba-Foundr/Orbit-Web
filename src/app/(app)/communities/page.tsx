@@ -32,7 +32,7 @@ export default async function CommunitiesPage() {
         </Link>
 
         <Link
-          href={hasCommunities ? "/events" : "/communities/new"}
+          href={hasCommunities ? "/communities/events" : "/communities/new"}
           className="glass flex flex-col gap-2.5 rounded-2xl p-4 transition hover:-translate-y-0.5"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 text-white">

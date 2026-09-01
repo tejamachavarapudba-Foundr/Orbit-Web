@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bookmark, EyeOff, Flag, Heart, Link as LinkIcon, MessageCircle, MoreHorizontal, Pencil, Send, Share2, Trash2, UserPlus, X } from "lucide-react";
+import { Bookmark, Copy, EyeOff, Flag, Link as LinkIcon, MessageCircle, MoreHorizontal, Pencil, Send, ThumbsUp, Trash2, UserPlus, X } from "lucide-react";
 
 import {
   createCommentAction,
@@ -66,6 +66,7 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
   const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
   const [notInterested, setNotInterested] = useState(false);
   const [reported, setReported] = useState(false);
+  const [interested, setInterested] = useState(false);
 
   const [, startTransition] = useTransition();
 
@@ -135,6 +136,21 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
         () => window.alert(url)
       );
     }
+  };
+
+  const handleCopyLink = () => {
+    setMenuOpen(false);
+    const url = `${window.location.origin}/p/${post.id}`;
+    navigator.clipboard.writeText(url).then(
+      () => window.alert("Link copied."),
+      () => window.alert(url)
+    );
+  };
+
+  const handleInterested = () => {
+    setMenuOpen(false);
+    setInterested(true);
+    window.alert("Thanks — we'll show more like this.");
   };
 
   const handleToggleFollow = () => {
@@ -361,11 +377,28 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
                   <>
                     <button
                       type="button"
+                      onClick={handleInterested}
+                      disabled={interested}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70 disabled:opacity-50"
+                    >
+                      <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2} />
+                      {interested ? "Marked interested" : "Interested"}
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleNotInterested}
                       className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70"
                     >
                       <EyeOff className="h-3.5 w-3.5" strokeWidth={2} />
                       Not interested
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px] font-semibold text-text hover:bg-muted-bg/70"
+                    >
+                      <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+                      Copy link
                     </button>
                     <button
                       type="button"
@@ -441,38 +474,41 @@ export const PostCard = ({ post, currentUserId, currentUserName = "", currentUse
 
       <PostMediaCarousel media={post.media} />
 
-      <div className="flex gap-1 border-t border-border/60 px-2 py-1">
+      <div className="flex items-center gap-1 border-t border-border/60 px-2 py-1">
         <button
           type="button"
           onClick={handleLike}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${liked ? "text-danger" : "text-muted hover:text-text"}`}
+          className={`flex h-9 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${liked ? "text-primary" : "text-muted hover:text-text"}`}
         >
-          <Heart className="h-4 w-4" strokeWidth={2} fill={liked ? "currentColor" : "none"} />
-          {likeCount > 0 ? likeCount : "Like"}
+          <ThumbsUp className="h-4 w-4" strokeWidth={2} fill={liked ? "currentColor" : "none"} />
+          {likeCount}
         </button>
         <button
           type="button"
           onClick={toggleComments}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${showComments ? "text-primary" : "text-muted hover:text-text"}`}
+          className={`flex h-9 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${showComments ? "text-primary" : "text-muted hover:text-text"}`}
         >
           <MessageCircle className="h-4 w-4" strokeWidth={2} />
-          {commentCount > 0 ? commentCount : "Comment"}
+          {commentCount}
         </button>
         <button
           type="button"
           onClick={handleShare}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-muted transition hover:bg-muted-bg/70 hover:text-text"
+          aria-label="Share post"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-muted transition hover:bg-muted-bg/70 hover:text-text"
         >
-          <Share2 className="h-4 w-4" strokeWidth={2} />
-          Share
+          <Send className="h-4 w-4" strokeWidth={2} />
         </button>
+
+        <div className="flex-1" />
+
         <button
           type="button"
           onClick={handleSave}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition hover:bg-muted-bg/70 ${saved ? "text-primary" : "text-muted hover:text-text"}`}
+          aria-label={saved ? "Unsave post" : "Save post"}
+          className={`flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-muted-bg/70 ${saved ? "text-primary" : "text-muted hover:text-text"}`}
         >
           <Bookmark className="h-4 w-4" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
-          {saved ? "Saved" : "Save"}
         </button>
       </div>
 

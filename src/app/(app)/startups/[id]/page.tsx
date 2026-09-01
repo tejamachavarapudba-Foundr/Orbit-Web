@@ -49,11 +49,23 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
     <div className="max-w-160">
       <BackButton fallbackHref="/discover" />
       <div className="glass overflow-hidden rounded-2xl">
-        <div className="h-24 bg-gradient-to-r from-primary/80 via-indigo-400/70 to-purple-400/70" />
+        {startup.coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={startup.coverUrl} alt="" className="h-24 w-full object-cover" />
+        ) : (
+          <div className="h-24 bg-gradient-to-r from-primary/80 via-indigo-400/70 to-purple-400/70" />
+        )}
         <div className="-mt-9 px-5 pb-5">
           <div className="flex items-end justify-between gap-3">
-            <div className={`flex h-18 w-18 items-center justify-center rounded-2xl border-[3px] border-surface bg-gradient-to-br font-display text-2xl font-bold text-white ${gradientFor(startup.id)}`}>
-              {startup.name.charAt(0).toUpperCase()}
+            <div className="h-18 w-18 flex-shrink-0 overflow-hidden rounded-2xl border-[3px] border-surface bg-surface shadow-sm">
+              {startup.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={startup.logoUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br font-display text-2xl font-bold text-white ${gradientFor(startup.id)}`}>
+                  {startup.name.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
             {!isOwner ? (
               <form action={(isSaved ? unsaveStartupAction : saveStartupAction).bind(null, id)}>

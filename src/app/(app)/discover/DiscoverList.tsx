@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, UserCheck, UserPlus } from "lucide-react";
@@ -125,6 +125,18 @@ export const DiscoverList = ({ people, incoming, outgoing, connections }: Discov
   }, [people, search, role]);
 
   const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const onScroll = () => {
+      const scrolledToBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 600;
+      if (scrolledToBottom) setVisibleCount((count) => count + PAGE_SIZE);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [hasMore]);
 
   return (
     <div>
@@ -200,15 +212,7 @@ export const DiscoverList = ({ people, incoming, outgoing, connections }: Discov
             ))}
           </div>
 
-          {visibleCount < filtered.length ? (
-            <button
-              type="button"
-              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-              className="glass mt-4 w-full rounded-2xl py-2.5 text-center text-sm font-bold text-primary hover:bg-primary-muted/40"
-            >
-              Load more
-            </button>
-          ) : null}
+          {hasMore ? <p className="mt-4 text-center text-xs font-semibold text-muted">Loading more...</p> : null}
         </>
       )}
     </div>

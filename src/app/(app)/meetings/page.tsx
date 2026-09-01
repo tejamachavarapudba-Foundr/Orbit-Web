@@ -6,17 +6,17 @@ import { getMe } from "@/lib/auth";
 import type { Meeting, MeetingProposal, MeetingsCancelled, MeetingsUpcoming } from "@/lib/types";
 
 import { CancelMeetingButton } from "./CancelMeetingButton";
+import { DisconnectGoogleButton } from "./DisconnectGoogleButton";
 import { GoogleConnectCard } from "./GoogleConnectCard";
 import { JoinMeetingButton } from "./JoinMeetingButton";
 import { RespondProposalForm } from "./RespondProposalForm";
 import { WithdrawButton } from "./WithdrawButton";
 
-const getGoogleConnected = async (): Promise<boolean> => {
+const getGoogleStatus = async (): Promise<{ connected: boolean; email?: string }> => {
   try {
-    const status = await apiFetch<{ connected: boolean }>("/google/oauth/status");
-    return status.connected;
+    return await apiFetch<{ connected: boolean; email?: string }>("/google/oauth/status");
   } catch (error) {
-    if (error instanceof ApiError) return false;
+    if (error instanceof ApiError) return { connected: false };
     throw error;
   }
 };
@@ -105,7 +105,8 @@ export default async function MeetingsPage({ searchParams }: MeetingsPageProps) 
   const params = await searchParams;
   const tab = (params.tab as (typeof tabs)[number]["key"]) ?? "upcoming";
 
-  const [me, isGoogleConnected] = await Promise.all([getMe(), getGoogleConnected()]);
+  const [me, googleStatus] = await Promise.all([getMe(), getGoogleStatus()]);
+  const isGoogleConnected = googleStatus.connected;
 
   return (
     <div className="max-w-160">
@@ -165,6 +166,12 @@ export default async function MeetingsPage({ searchParams }: MeetingsPageProps) 
         <GoogleConnectCard />
       ) : (
         <>
+          <div className="mb-3 flex items-center justify-between px-1">
+            <p className="text-xs text-muted">
+              Google Meet connected{googleStatus.email ? ` as ${googleStatus.email}` : ""}.
+            </p>
+            <DisconnectGoogleButton />
+          </div>
           {tab === "upcoming" ? <UpcomingTab myId={me.id} /> : null}
           {tab === "completed" ? <CompletedTab myId={me.id} /> : null}
           {tab === "cancelled" ? <CancelledTab myId={me.id} /> : null}

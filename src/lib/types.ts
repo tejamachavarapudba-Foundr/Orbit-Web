@@ -212,6 +212,9 @@ export type TrendingStartup = {
   stage: string;
   projectType: string;
   founderVerified?: boolean;
+  logoUrl?: string;
+  coverUrl?: string;
+  pitchVideoUrl?: string;
 };
 
 export type SavedStartup = {
