@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Image as ImageIcon, Link as LinkIcon, X } from "lucide-react";
 
 import { createPostAction, type CreatePostState } from "@/app/(app)/actions";
@@ -44,10 +45,21 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && resetAndClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, onClose]);
+
+  const resetAndClose = () => {
+    files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+    setFiles([]);
+    setContent("");
+    setShowLinkField(false);
+    setLinkUrl("");
+    formRef.current?.reset();
+    onClose();
+  };
 
   if (!open) return null;
 
@@ -77,14 +89,20 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
     setFiles(next);
   };
 
-  return (
+  // Rendered via a portal to escape the sidebar's `position: sticky`
+  // ancestor — sticky elements establish their own stacking context, which
+  // trapped this modal's z-50 backdrop below the header's z-40 (a sibling
+  // of that stacking context, not a descendant), letting feed content paint
+  // over the "dimmed" backdrop despite the lower z-index looking correct on
+  // paper. Portaling to <body> puts the modal in the root stacking context.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 px-4 pt-20 pb-10 backdrop-blur-sm">
       <div className="glass-strong w-full max-w-lg rounded-2xl p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-base font-bold text-text">Share an update</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={resetAndClose}
             aria-label="Close"
             className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-muted-bg/70 hover:text-text"
           >
@@ -183,7 +201,7 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={resetAndClose}
                   className="rounded-full border border-border/70 px-4 py-1.5 text-xs font-bold text-text hover:bg-muted-bg/70"
                 >
                   Cancel
@@ -200,6 +218,7 @@ export const CreatePostModal = ({ authorId, fullName, avatarUrl, open, onClose }
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
