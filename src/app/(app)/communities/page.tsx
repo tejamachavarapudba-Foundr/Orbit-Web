@@ -1,13 +1,22 @@
 import Link from "next/link";
-import { Calendar, Globe2, UserPlus, Users } from "lucide-react";
+import { Globe2, Users } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
-import type { Community } from "@/lib/types";
+import { getMe } from "@/lib/auth";
+import type { Community, Profile } from "@/lib/types";
+
+import { CommunityEventsLink } from "./CommunityEventsLink";
+import { CreateCommunityButton } from "./CreateCommunityButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function CommunitiesPage() {
-  const communities = await apiFetch<Community[]>("/communities/mine");
+  const [me, communities, allProfiles] = await Promise.all([
+    getMe(),
+    apiFetch<Community[]>("/communities/mine"),
+    apiFetch<Profile[]>("/profiles")
+  ]);
+  const people = allProfiles.filter((p) => p.id !== me.id);
   const hasCommunities = communities.length > 0;
 
   return (
@@ -23,28 +32,8 @@ export default async function CommunitiesPage() {
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-3.5">
-        <Link href="/communities/new" className="glass flex flex-col gap-2.5 rounded-2xl p-4 transition hover:-translate-y-0.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 text-white">
-            <UserPlus className="h-5 w-5" strokeWidth={2} />
-          </span>
-          <h2 className="text-sm font-bold text-text">Create a community</h2>
-          <p className="text-xs text-muted">Start a group and invite people to join.</p>
-        </Link>
-
-        <Link
-          href={hasCommunities ? "/communities/events" : "/communities/new"}
-          className="glass flex flex-col gap-2.5 rounded-2xl p-4 transition hover:-translate-y-0.5"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 text-white">
-            <Calendar className="h-5 w-5" strokeWidth={2} />
-          </span>
-          <h2 className="text-sm font-bold text-text">Community events</h2>
-          <p className="text-xs text-muted">
-            {hasCommunities
-              ? "Host a private meetup for one of your communities, or join public events."
-              : "Create a community group first, then host private events for its members."}
-          </p>
-        </Link>
+        <CreateCommunityButton people={people} />
+        <CommunityEventsLink hasCommunities={hasCommunities} />
       </div>
 
       <h2 className="mb-3 px-1 font-display text-sm font-bold text-text">My communities</h2>

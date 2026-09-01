@@ -43,7 +43,17 @@ export const NewMeetingForm = ({ projects, people }: NewMeetingFormProps) => {
 
   const [dateSlots, setDateSlots] = useState<{ date: string; time: string }[]>([{ date: "", time: "10:00" }]);
 
-  const singleInviteeId = inviteMode === "people" && selectedPeople.length === 1 ? selectedPeople[0].id : null;
+  // Checking availability isn't limited to the "People" invite mode — a
+  // selected startup's founder can just as well have published slots, and
+  // that path was never wired up: `singleInviteeId` only ever considered
+  // `selectedPeople`, so picking a startup always skipped straight to
+  // "Propose dates" even when the founder had open availability.
+  const singleInviteeId =
+    inviteMode === "startup"
+      ? projects.find((p) => p.id === targetStartupId)?.ownerId ?? null
+      : selectedPeople.length === 1
+        ? selectedPeople[0].id
+        : null;
 
   useEffect(() => {
     if (!singleInviteeId) {

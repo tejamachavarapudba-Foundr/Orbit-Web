@@ -1,14 +1,13 @@
 "use client";
 
 import { useTransition } from "react";
-import { Laptop, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 import { setThemeAction, type ThemeChoice } from "./actions";
 
 const options: { value: ThemeChoice; label: string; Icon: typeof Sun }[] = [
   { value: "light", label: "Light", Icon: Sun },
-  { value: "dark", label: "Dark", Icon: Moon },
-  { value: "system", label: "System", Icon: Laptop }
+  { value: "dark", label: "Dark", Icon: Moon }
 ];
 
 export const ThemeToggle = ({ current }: { current: ThemeChoice }) => {

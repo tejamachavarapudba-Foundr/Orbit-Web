@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bookmark, Calendar, Compass, Film, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Star, Users, Video } from "lucide-react";
 
-import { logoutAction } from "@/app/(app)/actions";
 import { Avatar } from "@/components/Avatar";
 import { CreatePostModal } from "@/components/CreatePostModal";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -135,12 +134,6 @@ export const Sidebar = ({
             </a>
           ) : null}
         </div>
-
-        <form action={logoutAction} className="border-t border-border/60 p-2">
-          <button type="submit" className={`${rowClass(false)} w-full text-danger`}>
-            Sign out
-          </button>
-        </form>
       </div>
 
       <CreatePostModal

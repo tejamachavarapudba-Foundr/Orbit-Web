@@ -5,7 +5,9 @@ import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
 import { BackButton } from "@/components/BackButton";
+import { ShareEventButton } from "./ShareEventButton";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatEventRange, getCountdownLabel, getDisplayStatus } from "@/lib/eventStatus";
 import type { AuthMe, EventAttendee, EventItem } from "@/lib/types";
 
 import { rsvpAction } from "../actions";
@@ -13,8 +15,11 @@ import { EventHostTools } from "./EventHostTools";
 
 export const dynamic = "force-dynamic";
 
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
+const statusStyle: Record<string, string> = {
+  Active: "text-primary",
+  Completed: "text-muted",
+  Cancelled: "text-danger"
+};
 
 type EventDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -36,20 +41,29 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const isGoing = attendees.some((a) => a.id === me.id);
   const isHost = event.hostId === me.id;
   const isCancelled = event.status === "CANCELLED";
+  const status = getDisplayStatus(event);
+  const countdown = getCountdownLabel(event);
 
   return (
     <div className="max-w-160">
       <BackButton fallbackHref="/events" />
       <div className="glass rounded-2xl p-6">
-        {isCancelled ? (
-          <span className="mb-3 inline-block rounded-full bg-danger-bg px-3 py-1 text-xs font-bold text-danger">Cancelled</span>
-        ) : null}
-        <h1 className="font-display text-xl font-bold text-text">{event.title}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-xl font-bold text-text">{event.title}</h1>
+              <span className={`text-xs font-bold ${statusStyle[status]}`}>{status}</span>
+              {countdown ? <span className="rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold text-muted">{countdown}</span> : null}
+            </div>
+            <p className="mt-1 text-sm text-muted">Hosted by {event.host?.fullName || "Startuphouze member"}</p>
+          </div>
+          <ShareEventButton title={event.title} />
+        </div>
 
         <div className="mt-3 flex flex-col gap-2 text-sm text-muted">
           <span className="flex items-center gap-2">
             <Calendar className="h-4 w-4 flex-shrink-0" strokeWidth={2} />
-            {formatDateTime(event.startsAt)}
+            {formatEventRange(event.startsAt, event.endsAt)}
           </span>
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4 flex-shrink-0" strokeWidth={2} />

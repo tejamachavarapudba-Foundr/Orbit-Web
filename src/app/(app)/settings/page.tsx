@@ -19,7 +19,7 @@ const items = [
 export default async function SettingsPage() {
   const store = await cookies();
   const stored = store.get("orbit_theme")?.value;
-  const current: ThemeChoice = stored === "light" || stored === "dark" ? stored : "system";
+  const current: ThemeChoice = stored === "dark" ? "dark" : "light";
 
   return (
     <div className="max-w-140">

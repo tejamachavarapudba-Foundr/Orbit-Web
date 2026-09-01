@@ -318,6 +318,7 @@ export type EventItem = {
   startsAt: string;
   endsAt: string | null;
   hostId: string;
+  host?: { id: string; fullName: string; avatarUrl: string } | null;
   isPrivate: boolean;
   status: string;
   cancellationReason?: string | null;

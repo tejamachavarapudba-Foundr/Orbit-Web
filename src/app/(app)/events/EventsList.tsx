@@ -5,19 +5,24 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calendar, MapPin, Search, Users } from "lucide-react";
 
+import { formatEventRange, getCountdownLabel, getDisplayStatus } from "@/lib/eventStatus";
 import type { EventItem } from "@/lib/types";
 
 import { rsvpAction } from "./actions";
 
 const filters = [
-  { label: "All events", value: "all" },
-  { label: "Upcoming", value: "upcoming" },
+  { label: "All", value: "all" },
   { label: "Joined", value: "joined" },
+  { label: "Upcoming", value: "upcoming" },
+  { label: "Completed", value: "completed" },
   { label: "Cancelled", value: "cancelled" }
 ] as const;
 
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
+const statusStyle: Record<string, string> = {
+  Active: "bg-primary-muted text-primary",
+  Completed: "bg-muted-bg text-muted",
+  Cancelled: "bg-danger-bg text-danger"
+};
 
 type EventWithStatus = EventItem & { isGoing: boolean };
 
@@ -33,12 +38,13 @@ export const EventsList = ({ events }: EventsListProps) => {
   const [, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
-    const now = Date.now();
     const query = search.trim().toLowerCase();
     return events.filter((event) => {
-      if (filter === "upcoming" && !(event.status === "ACTIVE" && new Date(event.startsAt).getTime() >= now)) return false;
+      const status = getDisplayStatus(event);
+      if (filter === "upcoming" && !(status === "Active" && new Date(event.startsAt).getTime() >= Date.now())) return false;
       if (filter === "joined" && !event.isGoing) return false;
-      if (filter === "cancelled" && event.status !== "CANCELLED") return false;
+      if (filter === "completed" && status !== "Completed") return false;
+      if (filter === "cancelled" && status !== "Cancelled") return false;
       if (!query) return true;
       return [event.title, event.description, event.location, event.status].filter(Boolean).some((field) => field!.toLowerCase().includes(query));
     });
@@ -89,23 +95,27 @@ export const EventsList = ({ events }: EventsListProps) => {
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((event) => {
-            const isCancelled = event.status === "CANCELLED";
+            const status = getDisplayStatus(event);
+            const countdown = getCountdownLabel(event);
+            const canJoin = status !== "Cancelled" && status !== "Completed";
             return (
-              <div key={event.id} className="glass flex items-center gap-4 rounded-2xl p-4">
-                <Link href={`/events/${event.id}`} className="flex min-w-0 flex-1 items-center gap-4">
+              <div key={event.id} className="glass flex flex-col gap-3 rounded-2xl p-4">
+                <Link href={`/events/${event.id}`} className="flex min-w-0 items-start gap-4">
                   <div className="flex h-13 w-13 flex-shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
                     <span className="text-[10px] font-bold uppercase leading-none">{new Intl.DateTimeFormat("en-US", { month: "short" }).format(new Date(event.startsAt))}</span>
                     <span className="font-display text-base font-bold leading-none">{new Date(event.startsAt).getDate()}</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <h3 className="truncate text-sm font-bold text-text">{event.title}</h3>
-                      {isCancelled ? <span className="flex-shrink-0 rounded-full bg-danger-bg px-2 py-0.5 text-[10px] font-bold text-danger">Cancelled</span> : null}
+                      <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${statusStyle[status]}`}>{status}</span>
+                      {countdown ? <span className="flex-shrink-0 rounded-full bg-muted-bg px-2 py-0.5 text-[10px] font-bold text-muted">{countdown}</span> : null}
                     </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                    <p className="mt-0.5 text-xs text-muted">Hosted by {event.host?.fullName || "Startuphouze member"}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" strokeWidth={2} />
-                        {formatDateTime(event.startsAt)}
+                        {formatEventRange(event.startsAt, event.endsAt)}
                       </span>
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" strokeWidth={2} />
@@ -119,11 +129,11 @@ export const EventsList = ({ events }: EventsListProps) => {
                   </div>
                 </Link>
 
-                <div className="flex flex-shrink-0 items-center gap-2">
+                <div className="flex flex-shrink-0 items-center gap-2 self-end">
                   {event.isGoing ? <span className="rounded-full bg-primary-muted px-2.5 py-1 text-[10.5px] font-bold text-primary">You are going</span> : null}
                   <button
                     type="button"
-                    disabled={isCancelled || pendingId === event.id}
+                    disabled={!canJoin || pendingId === event.id}
                     onClick={() => handleRsvp(event.id)}
                     className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
                       event.isGoing

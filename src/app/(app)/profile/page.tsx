@@ -1,3 +1,4 @@
+import { logoutAction } from "@/app/(app)/actions";
 import { BackButton } from "@/components/BackButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
@@ -51,7 +52,13 @@ export default async function MyProfilePage() {
         <ResumeCard fileName={profile.resumeFileName} fileSize={profile.resumeFileSize} />
       </div>
 
-      <div className="mt-4">
+      <form action={logoutAction} className="mt-4">
+        <button type="submit" className="w-full rounded-2xl border border-border/70 px-4 py-3 text-sm font-bold text-text transition hover:bg-muted-bg/70">
+          Sign out
+        </button>
+      </form>
+
+      <div className="mt-3">
         <DeleteAccountButton />
       </div>
     </div>
