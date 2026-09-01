@@ -182,6 +182,11 @@ export const PitchReelFeed = ({ initialItems, initialNextCursor, currentUserId }
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Holding a key fires a burst of keydown events (e.repeat) — without
+      // this guard each one advanced the index, tearing through several
+      // videos in a flash (rapid unmount/remount below) before settling,
+      // which read as "flickering" and a momentary layout jump.
+      if (e.repeat) return;
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         e.preventDefault();
         goTo(index + 1);
@@ -241,7 +246,6 @@ export const PitchReelFeed = ({ initialItems, initialNextCursor, currentUserId }
   return (
     <div className="relative h-[calc(100vh-140px)] overflow-hidden rounded-2xl bg-black">
       <video
-        key={current.id}
         ref={videoRef}
         src={current.pitchVideoUrl}
         className="h-full w-full object-contain"

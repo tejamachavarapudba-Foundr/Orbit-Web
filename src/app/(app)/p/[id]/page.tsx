@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { BackButton } from "@/components/BackButton";
 import { PostCard } from "@/components/PostCard";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getMe } from "@/lib/auth";
@@ -33,6 +34,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <div className="mx-auto max-w-160">
+      <BackButton />
       <PostCard
         post={post}
         currentUserId={me.id}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Rocket, Search, Users } from "lucide-react";
 
 import { Avatar } from "@/components/Avatar";
+import { BackButton } from "@/components/BackButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
 import type { SearchResults } from "@/lib/types";
@@ -25,6 +26,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="max-w-160">
+      <BackButton />
       <form method="get" className="glass mb-5 flex items-center gap-2.5 rounded-2xl px-4 py-3">
         <Search className="h-4 w-4 flex-shrink-0 text-muted" strokeWidth={2} />
         <input

@@ -20,7 +20,7 @@ type TopNavProps = {
 
 export const TopNav = ({ profile, unreadNotifications = 0, unreadMessages = 0, unreadJobs = 0 }: TopNavProps) => {
   return (
-    <header className="glass sticky top-0 z-40 flex h-16 items-center gap-5 border-x-0 border-t-0 px-5">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-5 border-b border-border/60 bg-surface px-5 shadow-sm">
       <Link href="/" className="flex flex-shrink-0 items-center gap-2 font-display text-lg font-bold text-text">
         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary shadow-md shadow-primary/30">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">

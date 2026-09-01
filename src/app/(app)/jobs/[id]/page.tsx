@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Briefcase, Building2, Layers } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
+import { BackButton } from "@/components/BackButton";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, Job } from "@/lib/types";
 
@@ -30,6 +31,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   return (
     <div className="max-w-160">
+      <BackButton fallbackHref="/jobs" />
       <div className="glass rounded-2xl p-6">
         <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-500 text-on-primary">
           <Briefcase className="h-6 w-6" strokeWidth={2} />

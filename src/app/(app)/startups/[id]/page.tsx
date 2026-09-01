@@ -4,6 +4,7 @@ import { Bookmark, Briefcase, ChevronRight, Globe, MapPin, Star, TrendingUp, Use
 import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
+import { BackButton } from "@/components/BackButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, StartupDetail } from "@/lib/types";
@@ -46,6 +47,7 @@ export default async function StartupDetailPage({ params }: StartupPageProps) {
 
   return (
     <div className="max-w-160">
+      <BackButton fallbackHref="/discover" />
       <div className="glass overflow-hidden rounded-2xl">
         <div className="h-24 bg-gradient-to-r from-primary/80 via-indigo-400/70 to-purple-400/70" />
         <div className="-mt-9 px-5 pb-5">

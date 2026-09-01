@@ -125,7 +125,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             isAdmin={me.role?.toUpperCase() === "ADMIN"}
             isInvestor={role === "investor"}
             pendingRequests={pendingRequests}
-            unreadNotifications={unreadNotifications}
             connectionsCount={connectionsCount}
             followingCount={followCounts.following}
             unreadProjects={unreadProjects}

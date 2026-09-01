@@ -1,5 +1,6 @@
 import { Bell, CheckCheck, UserPlus, Users } from "lucide-react";
 
+import { BackButton } from "@/components/BackButton";
 import { apiFetch } from "@/lib/api";
 import { BELL_EXCLUDED_TYPES } from "@/lib/notificationCategories";
 import type { AppNotification } from "@/lib/types";
@@ -35,6 +36,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="max-w-160">
+      <BackButton />
       <div className="glass mb-4 flex items-center gap-3.5 rounded-2xl px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-400 to-rose-500 text-on-primary">
           <Bell className="h-5 w-5" strokeWidth={2} />

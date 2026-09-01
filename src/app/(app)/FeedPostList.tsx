@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { PostCard } from "@/components/PostCard";
 import type { Post } from "@/lib/types";
@@ -32,7 +32,7 @@ export const FeedPostList = ({
   const [isPending, startTransition] = useTransition();
   const savedIds = new Set(initialSavedIds);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     startTransition(async () => {
       const nextPage = page + 1;
       const nextPosts = await loadMorePostsAction(nextPage);
@@ -40,7 +40,24 @@ export const FeedPostList = ({
       setPage(nextPage);
       setHasMore(nextPosts.length === FEED_PAGE_SIZE);
     });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  useEffect(() => {
+    if (!hasMore || isPending) return;
+    // Mirrors mobile's onEndReachedThreshold={0.2} — start loading the next
+    // page a bit before the user actually scrolls to the very bottom.
+    // A plain scroll listener (rather than IntersectionObserver) is used
+    // here since it's driven by real scroll position, not the compositor's
+    // async intersection timing.
+    const onScroll = () => {
+      const scrolledToBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 600;
+      if (scrolledToBottom) loadMore();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [hasMore, isPending, loadMore]);
 
   if (posts.length === 0) {
     return (
@@ -64,15 +81,10 @@ export const FeedPostList = ({
         />
       ))}
 
-      {hasMore ? (
-        <button
-          type="button"
-          onClick={loadMore}
-          disabled={isPending}
-          className="glass w-full rounded-2xl py-2.5 text-center text-sm font-bold text-primary hover:bg-primary-muted/40 disabled:opacity-60"
-        >
-          {isPending ? "Loading..." : "Load more"}
-        </button>
+      {hasMore && isPending ? (
+        <div className="flex justify-center py-3">
+          <p className="text-sm font-semibold text-muted">Loading more...</p>
+        </div>
       ) : null}
     </div>
   );

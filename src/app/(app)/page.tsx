@@ -74,13 +74,20 @@ const loadFeed = async (): Promise<{ posts: Post[]; failed: boolean }> => {
   }
 };
 
+// Investors/service providers care about which startups are out there;
+// founders/professionals/advisors care about who's hiring. Only one rail is
+// ever shown, so only fetch the one this role will actually see.
+const showsTrending = (role: string) => role === "investor" || role === "service_provider";
+
 export default async function HomePage() {
   const me = await getMe();
+  const role = me.profile.role?.toLowerCase() ?? "";
+  const wantsTrending = showsTrending(role);
   const [{ posts, failed }, trending, savedIds, hiringJobs, suggestedPeople] = await Promise.all([
     loadFeed(),
-    loadTrending(),
+    wantsTrending ? loadTrending() : Promise.resolve([]),
     loadSavedIds(),
-    loadHiringJobs(),
+    wantsTrending ? Promise.resolve([]) : loadHiringJobs(),
     loadPeopleYouMayKnow(me.id)
   ]);
 
@@ -108,8 +115,7 @@ export default async function HomePage() {
       </div>
 
       <aside className="sticky top-20 flex flex-col gap-4">
-        <TrendingStartups startups={trending} />
-        <StartupsHiring jobs={hiringJobs} />
+        {wantsTrending ? <TrendingStartups startups={trending} /> : <StartupsHiring jobs={hiringJobs} />}
         <PeopleYouMayKnow people={suggestedPeople} />
       </aside>
     </div>

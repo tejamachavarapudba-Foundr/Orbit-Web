@@ -4,6 +4,7 @@ import { Briefcase, ExternalLink, Globe, MapPin, MessageCircle, UserCheck, UserP
 import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
+import { BackButton } from "@/components/BackButton";
 import { PostCard } from "@/components/PostCard";
 import { RoleDetailsSection } from "@/components/RoleDetailsSection";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -43,6 +44,7 @@ export default async function UserProfilePage({ params }: ProfilePageProps) {
 
   return (
     <div className="max-w-160">
+      <BackButton />
       <div className="glass overflow-hidden rounded-2xl">
         <div className="h-24 bg-gradient-to-r from-primary/80 via-indigo-400/70 to-purple-400/70" />
         <div className="-mt-9 px-5 pb-5">

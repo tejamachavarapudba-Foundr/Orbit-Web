@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
 
 import { Avatar } from "@/components/Avatar";
+import { BackButton } from "@/components/BackButton";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getMe } from "@/lib/auth";
 import type { CommunityDetail, Profile } from "@/lib/types";
@@ -33,6 +34,7 @@ export default async function CommunityDetailPage({ params }: CommunityDetailPag
 
   return (
     <div className="max-w-160">
+      <BackButton fallbackHref="/communities" />
       <div className="glass rounded-2xl p-6">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 font-display text-xl font-bold text-white">
           {community.name.charAt(0).toUpperCase()}

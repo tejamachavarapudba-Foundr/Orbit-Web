@@ -4,6 +4,7 @@ import { Calendar, MapPin, Users } from "lucide-react";
 import { getMe } from "@/lib/auth";
 
 import { Avatar } from "@/components/Avatar";
+import { BackButton } from "@/components/BackButton";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { AuthMe, EventAttendee, EventItem } from "@/lib/types";
 
@@ -38,6 +39,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   return (
     <div className="max-w-160">
+      <BackButton fallbackHref="/events" />
       <div className="glass rounded-2xl p-6">
         {isCancelled ? (
           <span className="mb-3 inline-block rounded-full bg-danger-bg px-3 py-1 text-xs font-bold text-danger">Cancelled</span>

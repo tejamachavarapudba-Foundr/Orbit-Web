@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/BackButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { apiFetch } from "@/lib/api";
 import type { AuthMe } from "@/lib/types";
@@ -18,6 +19,7 @@ export default async function MyProfilePage() {
 
   return (
     <div className="max-w-140">
+      <BackButton />
       <div className="glass overflow-hidden rounded-2xl">
         <div className="h-16 bg-gradient-to-r from-primary via-indigo-400 to-purple-400" />
         <div className="px-5 pb-5">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Bookmark, Calendar, Compass, Film, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Star, Users, Video } from "lucide-react";
+import { Bookmark, Calendar, Compass, Film, Globe2, PenSquare, Rocket, Settings as SettingsIcon, Shield, Star, Users, Video } from "lucide-react";
 
 import { logoutAction } from "@/app/(app)/actions";
 import { Avatar } from "@/components/Avatar";
@@ -28,7 +28,6 @@ type SidebarProps = {
   isAdmin: boolean;
   isInvestor: boolean;
   pendingRequests: number;
-  unreadNotifications: number;
   connectionsCount: number;
   followingCount: number;
   unreadProjects: number;
@@ -47,7 +46,6 @@ export const Sidebar = ({
   isAdmin,
   isInvestor,
   pendingRequests,
-  unreadNotifications,
   connectionsCount,
   followingCount,
   unreadProjects,
@@ -113,18 +111,6 @@ export const Sidebar = ({
               </Link>
             );
           })}
-
-          <Link href="/notifications" className={rowClass(pathname === "/notifications")}>
-            <span className="flex items-center gap-3">
-              <span className={iconChipClass("from-red-400 to-rose-500")}>
-                <Bell className="h-3.5 w-3.5" strokeWidth={2} />
-              </span>
-              Notifications
-            </span>
-            {unreadNotifications > 0 ? (
-              <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{unreadNotifications}</span>
-            ) : null}
-          </Link>
 
           <Link href="/settings" className={rowClass(pathname.startsWith("/settings"))}>
             <span className="flex items-center gap-3">
