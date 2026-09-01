@@ -109,5 +109,11 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
     return undefined as T;
   }
 
-  return (await res.json()) as T;
+  // A 200 with a genuinely empty body (seen once from an endpoint that
+  // returned null for a since-deleted account) made res.json() throw
+  // "Unexpected end of JSON input" uncaught, crashing the whole page with
+  // Next.js's generic "This page couldn't load" instead of a clear error.
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 };
