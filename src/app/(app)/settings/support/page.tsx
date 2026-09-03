@@ -14,10 +14,10 @@ export default function SupportPage() {
         </span>
         <p className="text-sm text-muted">Have a question or ran into an issue? Our team usually replies within a day.</p>
         <a
-          href="mailto:support@orbit.app"
+          href="mailto:support@startuphouze.com"
           className="rounded-full bg-gradient-to-r from-primary to-indigo-500 px-5 py-2.5 text-sm font-bold text-on-primary shadow-md shadow-primary/25"
         >
-          Email support@orbit.app
+          Email support@startuphouze.com
         </a>
       </div>
 
