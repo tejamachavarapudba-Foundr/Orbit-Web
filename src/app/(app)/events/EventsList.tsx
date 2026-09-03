@@ -90,7 +90,7 @@ export const EventsList = ({ events }: EventsListProps) => {
       {filtered.length === 0 ? (
         <div className="glass rounded-2xl p-10 text-center">
           <p className="text-sm font-semibold text-text">No events found</p>
-          <p className="mt-1 text-sm text-muted">Try another filter or check upcoming Startuphouze events soon.</p>
+          <p className="mt-1 text-sm text-muted">Try another filter or check upcoming Orbit events soon.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -111,7 +111,7 @@ export const EventsList = ({ events }: EventsListProps) => {
                       <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${statusStyle[status]}`}>{status}</span>
                       {countdown ? <span className="flex-shrink-0 rounded-full bg-muted-bg px-2 py-0.5 text-[10px] font-bold text-muted">{countdown}</span> : null}
                     </div>
-                    <p className="mt-0.5 text-xs text-muted">Hosted by {event.host?.fullName || "Startuphouze member"}</p>
+                    <p className="mt-0.5 text-xs text-muted">Hosted by {event.host?.fullName || "Orbit member"}</p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" strokeWidth={2} />

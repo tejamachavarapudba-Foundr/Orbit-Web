@@ -55,7 +55,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <span className={`text-xs font-bold ${statusStyle[status]}`}>{status}</span>
               {countdown ? <span className="rounded-full bg-muted-bg px-2 py-0.5 text-[10.5px] font-bold text-muted">{countdown}</span> : null}
             </div>
-            <p className="mt-1 text-sm text-muted">Hosted by {event.host?.fullName || "Startuphouze member"}</p>
+            <p className="mt-1 text-sm text-muted">Hosted by {event.host?.fullName || "Orbit member"}</p>
           </div>
           <ShareEventButton title={event.title} />
         </div>
