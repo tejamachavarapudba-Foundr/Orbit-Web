@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { FormHeader } from "@/components/FormHeader";
 
 const sections = [
@@ -36,6 +38,10 @@ export default function DataPrivacyPage() {
           </div>
         ))}
       </div>
+
+      <Link href="/privacy" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
+        Read the full Privacy Policy →
+      </Link>
     </div>
   );
 }
