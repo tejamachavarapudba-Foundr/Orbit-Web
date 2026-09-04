@@ -46,7 +46,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const me = await getMe();
   const role = me.profile.role?.toLowerCase();
   const isOwner = job.posterId === me.id;
-  const canManageJobs = role === "founder" || role === "investor";
+  const canManageJobs =
+    role === "founder" || role === "co_founder" || role === "investor" || role === "hr" || role === "service_provider";
   const myApplication = job.applications?.find((a) => a.applicantId === me.id);
   const canApply = !canManageJobs && !isOwner && !myApplication;
 

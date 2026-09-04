@@ -30,7 +30,8 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   const tab = tabParam === "mine" ? "mine" : "browse";
   const role = me.profile.role?.toLowerCase();
-  const canPostJobs = role === "founder" || role === "investor";
+  const canPostJobs =
+    role === "founder" || role === "co_founder" || role === "investor" || role === "hr" || role === "service_provider";
 
   return (
     <div className="max-w-160">
